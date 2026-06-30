@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OKS Kassenbuch</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 15px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #222;
+    }
+
+    .box {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 5px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background: #0b74de;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      font-size: 14px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background: #222;
+      color: white;
+    }
+
+    .summe {
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>OKS Kassenbuch</h1>
+
+  <div class="box">
+    <label>Datum</label>
+    <input type="date" id="datum">
+
+    <label>Art</label>
+    <select id="art">
+      <option value="Einnahme">Einnahme</option>
+      <option value="Ausgabe">Ausgabe</option>
+    </select>
+
+    <label>Beschreibung</label>
+    <input type="text" id="beschreibung" placeholder="z.B. Fahrt, Tanken, Waschanlage">
+
+    <label>Betrag in €</label>
+    <input type="number" id="betrag" step="0.01" placeholder="0.00">
+
+    <button onclick="eintragSpeichern()">Eintrag speichern</button>
+  </div>
+
+  <div class="box summe">
+    Kassenstand: <span id="kassenstand">0.00</span> €
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Datum</th>
+        <th>Art</th>
+        <th>Beschreibung</th>
+        <th>Betrag</th>
+      </tr>
+    </thead>
+    <tbody id="liste"></tbody>
+  </table>
+
+  <script>
+    let eintraege = JSON.parse(localStorage.getItem("oks_kassenbuch")) || [];
+
+    document.getElementById("datum").valueAsDate = new Date();
+
+    function eintragSpeichern() {
+      const datum = document.getElementById("datum").value;
+      const art = document.getElementById("art").value;
+      const beschreibung = document.getElementById("beschreibung").value;
+      const betrag = parseFloat(document.getElementById("betrag").value);
+
+      if (!datum || !beschreibung || isNaN(betrag)) {
+        alert("Bitte alle Felder ausfüllen.");
+        return;
+      }
+
+      eintraege.push({
+        datum: datum,
+        art: art,
+        beschreibung: beschreibung,
+        betrag: betrag
+      });
+
+      localStorage.setItem("oks_kassenbuch", JSON.stringify(eintraege));
+
+      document.getElementById("beschreibung").value = "";
+      document.getElementById("betrag").value = "";
+
+      anzeigen();
+    }
+
+    function anzeigen() {
+      const liste = document.getElementById("liste");
+      const kassenstand = document.getElementById("kassenstand");
+
+      liste.innerHTML = "";
+      let summe = 0;
+
+      eintraege.forEach(e => {
+        const wert = e.art === "Einnahme" ? e.betrag : -e.betrag;
+        summe += wert;
+
+        const zeile = document.createElement("tr");
+        zeile.innerHTML = `
+          <td>${e.datum}</td>
+          <td>${e.art}</td>
+          <td>${e.beschreibung}</td>
+          <td>${wert.toFixed(2)} €</td>
+        `;
+        liste.appendChild(zeile);
+      });
+
+      kassenstand.textContent = summe.toFixed(2);
+    }
+
+    anzeigen();
+  </script>
+
+</body>
+</html>
