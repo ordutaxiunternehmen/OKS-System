@@ -91,6 +91,20 @@
 .oksLicenseFooter{margin:16px 0 4px 0;text-align:center;color:#9aa0a6;font-size:11px;line-height:1.4}
 .oksLicenseFooter b{color:#ffd400}
 @media print{.oksLicenseInfo,.oksLicenseFooter{display:none!important}}
+
+  /* OKS Modul-Navigation: ergänzt am 2026-07-01; bestehende App-Funktionen bleiben unverändert */
+  .oksModuleNav{position:fixed;left:10px;top:80px;z-index:9999;width:170px;background:#070707;border:1px solid #2a2a2a;border-radius:14px;padding:10px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+  .oksModuleNavTitle{color:var(--accent);font-weight:900;font-size:13px;margin:2px 0 8px 0;letter-spacing:.4px}
+  .oksModuleNav a{display:block;text-decoration:none;color:#fff;background:#151515;border:1px solid #303030;border-radius:10px;padding:10px 9px;margin:7px 0;font-weight:900;font-size:13px}
+  .oksModuleNav a:hover,.oksModuleNav a:focus{border-color:var(--accent);color:var(--accent);outline:none}
+  .oksModuleNav .active{background:var(--accent);color:#000;border-color:var(--accent)}
+  @media(min-width:980px){body{padding-left:198px}}
+  @media(max-width:979px){
+    .oksModuleNav{position:static;width:auto;margin:0 0 12px 0;display:flex;gap:7px;align-items:center;overflow-x:auto;border-radius:12px}
+    .oksModuleNavTitle{white-space:nowrap;margin:0 4px 0 0}
+    .oksModuleNav a{white-space:nowrap;margin:0}
+  }
+
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -417,6 +431,15 @@
 
 </head>
 <body>
+
+
+<nav class="oksModuleNav noPrint" aria-label="OKS Module">
+  <div class="oksModuleNavTitle">OKS Module</div>
+  <a class="active" href="./">Kassenbuch</a>
+  <a href="apps/fahrtenbuch/">Fahrtenbuch</a>
+  <a href="apps/schichtauswertung/">Schichtauswertung</a>
+</nav>
+
 
 <div id="oksPrintBrandHeader" style="display:none">
   <div class="oksLogo">OKS</div>

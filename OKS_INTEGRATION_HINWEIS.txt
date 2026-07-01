@@ -1,0 +1,12 @@
+OKS-System Integration
+
+Diese ZIP enthält:
+- die bestehende OKS-Hauptapp im Hauptordner
+- die Fahrtenbuch-App unverändert unter apps/fahrtenbuch/
+- die Schichtauswertung/Arbeitszeit-App unverändert unter apps/schichtauswertung/
+
+Geändert wurde nur die Hauptdatei index.html der OKS-App:
+- linke OKS-Modulnavigation ergänzt
+- Buttons: Kassenbuch, Fahrtenbuch, Schichtauswertung
+
+Die Funktionsdateien der beiden Zusatz-Apps wurden nicht verändert.
