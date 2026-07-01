@@ -1,0 +1,12 @@
+{
+  "name": "oks-steuer-app-netlify",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Statische OKS Steuer-App für Netlify Deployment",
+  "scripts": {
+    "start": "npx serve .",
+    "build": "echo Static app - no build step required"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

@@ -1,0 +1,12 @@
+OKS Taxi Kassenbuch 2026 / OKS Steuerberater-App
+
+Urheber / Lizenzinhaber: Hasan Ordu
+Kontakt: hasanordu1905@gmail.com
+
+Alle Rechte vorbehalten.
+
+Diese App, der Quellcode, die Struktur, die Funktionen und die Idee der digitalen Kassenbuch-, Tankbeleg-, Monatsablage- und Steuerberater-ZIP-Lösung gehören Hasan Ordu.
+
+Eine Nutzung, Weitergabe, Kopie, Veränderung, Integration in fremde Systeme, Veröffentlichung, Vermietung, Unterlizenzierung oder kommerzielle Verwertung ist nur mit ausdrücklicher schriftlicher Zustimmung von Hasan Ordu erlaubt.
+
+© 2026 Hasan Ordu. Alle Rechte vorbehalten.
