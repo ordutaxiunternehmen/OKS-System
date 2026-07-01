@@ -1,0 +1,2136 @@
+<!DOCTYPE html>
+<!--
+  OKS Taxi Kassenbuch 2026 / OKS Steuerberater-App
+  Urheber / Lizenzinhaber: Hasan Ordu
+  Kontakt: hasanordu1905@gmail.com
+
+  Alle Rechte vorbehalten.
+  Nutzung, Weitergabe, Kopie, Veränderung, Integration in fremde Systeme
+  oder kommerzielle Verwertung nur mit ausdrücklicher schriftlicher Zustimmung
+  von Hasan Ordu.
+
+  Lizenzhinweis: Diese App und der Quellcode gehören Hasan Ordu.
+-->
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OKS Taxi Kassenbuch 2026</title>
+<meta name="author" content="Hasan Ordu" />
+<meta name="copyright" content="© 2026 Hasan Ordu. Alle Rechte vorbehalten." />
+<meta name="license" content="Proprietär - Nutzung nur mit schriftlicher Zustimmung von Hasan Ordu" />
+<style>
+  :root{--bg:#000;--fg:#fff;--accent:#ffd400;--grid:#3a3a3a;--head:#111;--muted:#9aa0a6;}
+  *{box-sizing:border-box}
+  body{background:var(--bg); color:var(--fg); font-family:Arial, Helvetica, sans-serif; margin:0; padding:14px;}
+  .topbar{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+  .logo{font-weight:900; letter-spacing:.8px; color:var(--accent); font-size:20px; padding:6px 10px; border:1px solid #2a2a2a; border-radius:12px; background:#070707;}
+  .btn{background:var(--accent); border:0; padding:10px 12px; font-weight:900; border-radius:10px; cursor:pointer;}
+  .btn.secondary{background:#2a2a2a; color:#fff;}
+  .btn.danger{background:#b00020; color:#fff;}
+  .hint{color:var(--muted); font-size:12px; margin-top:8px; line-height:1.35}
+  .tabs{display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;}
+  .tab{padding:8px 10px; border-radius:999px; border:1px solid #2a2a2a; background:#0a0a0a; color:#fff; cursor:pointer; font-weight:800; font-size:12px;}
+  .tab.active{border-color:var(--accent); color:var(--accent);}
+  .layout{display:grid; grid-template-columns: 1fr; gap:12px; margin-top:12px;}
+  @media(min-width: 980px){ .layout{grid-template-columns: 3fr 1.35fr;} }
+  .card{background:#0b0b0b; border:1px solid #1e1e1e; border-radius:14px; padding:12px;}
+  .title{color:var(--accent); font-weight:900; margin:0 0 10px 0; font-size:13px;}
+  table{width:100%; border-collapse:collapse; table-layout:fixed;}
+  th,td{border:1px solid var(--grid); padding:6px; text-align:center; font-size:12.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  th{background:var(--head); font-size:12px;}
+  td.left, th.left{text-align:left; padding-left:8px;}
+  tfoot th{background:#0f0f0f;}
+  .rightcol{display:flex; flex-direction:column; gap:10px;}
+  .kpi{display:grid; grid-template-columns: 1fr 1fr; gap:8px; font-size:12.5px;}
+  .kpi .box{border:1px solid #242424; border-radius:12px; padding:10px; background:#070707;}
+  .kpi .label{color:var(--muted); font-size:11px;}
+  .kpi .val{font-size:16px; font-weight:900; margin-top:2px;}
+  .chipRow{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;}
+  .chip{border:1px solid #2a2a2a; background:#0a0a0a; padding:6px 10px; border-radius:999px; font-size:12px;}
+  .chip b{color:var(--accent);}
+  .row{display:flex; gap:8px; flex-wrap:wrap; align-items:end;}
+  .field{display:flex; flex-direction:column; gap:4px; flex:1; min-width:140px;}
+  .field label{font-size:11px; color:var(--muted);}
+  .field input, .field select{padding:10px 10px; border-radius:10px; border:1px solid #2a2a2a; background:#0a0a0a; color:#fff; font-weight:900;}
+  .mini{font-size:12px; color:var(--muted); line-height:1.35;}
+  .foot{margin-top:10px; color:var(--muted); font-size:11px;}
+  .warn{color:#ffb4a2; font-weight:800;}
+  .ok{color:#b9f6ca; font-weight:800;}
+  .noPrint{}
+  @page { size: A4 landscape; margin: 8mm; }
+  @media print{
+    /* Druck: Schwarz-Weiß, kein schwarzer Hintergrund */
+    body{padding:0; background:#fff !important; color:#000 !important;}
+    .card{border:0; background:#fff !important; padding:0;}
+    .topbar, .hint, .tabs, .noPrint{display:none !important;}
+    .layout{grid-template-columns: 3fr 1.35fr; gap:10mm;}
+    table{font-size:10.5px;}
+    th,td{border:1px solid #000; font-size:10.5px; padding:3px;}
+    th{background:#eaeaea !important; color:#000 !important;}
+    tfoot th{background:#f2f2f2 !important;}
+    .kpi .box{border:1px solid #000; background:#fff !important;}
+    .chip{border:1px solid #000; background:#fff !important;}
+    .logo{border:1px solid #000; background:#fff !important; color:#000 !important;}
+    .title{color:#000 !important;}
+  }
+
+  .csvMapOverlay{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px;}
+  .csvMapBox{width:min(860px,96vw);max-height:92vh;overflow:auto;background:var(--card,#fff);color:var(--text,#111);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.35);padding:18px;border:1px solid rgba(0,0,0,.12);}
+  .csvMapBox h3{margin:0 0 8px 0;font-size:20px;}
+  .csvMapGrid{display:grid;grid-template-columns:230px 1fr;gap:10px 14px;margin-top:14px;align-items:center;}
+  .csvMapGrid label{font-weight:700;}
+  .csvMapGrid select{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,.18);background:#fff;color:#111;}
+  .csvMapActions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap;}
+  .csvMapHint{font-size:13px;opacity:.82;line-height:1.35;margin-top:8px;}
+
+
+/* Sichtbarer Lizenzhinweis - keine Funktionsänderung */
+.oksLicenseInfo{border:1px solid #2a2a2a;background:#070707;border-radius:14px;padding:10px 12px;margin-top:10px;color:#9aa0a6;font-size:11.5px;line-height:1.45}
+.oksLicenseInfo b{color:#ffd400}
+.oksLicenseFooter{margin:16px 0 4px 0;text-align:center;color:#9aa0a6;font-size:11px;line-height:1.4}
+.oksLicenseFooter b{color:#ffd400}
+@media print{.oksLicenseInfo,.oksLicenseFooter{display:none!important}}
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<style id="oks-pdf-right-input-style">
+  .pdfCellInput{
+    width:84px; max-width:100%; box-sizing:border-box; padding:8px 6px;
+    border:1px solid #3a3a3a; border-radius:10px; background:#0a0a0a;
+    color:#fff; text-align:center; font-weight:900; font-size:12.5px;
+  }
+  @media print{
+    .pdfCellInput{
+      border:0 !important; background:transparent !important; color:#000 !important;
+      width:100% !important; padding:0 !important;
+    }
+  }
+</style>
+
+<style id="oks-print-clean-style">
+@media print{
+  .title + .kpi + .chipRow,
+  #k_pay_bar, #k_pay_ext, #k_pay_eigen, #k_pay_rech, #k_pdf_total, #k_book_total, #k_diff_total,
+  #k_import_corr, #k_manual_corr { }
+  /* Zahlungsarten Kontrolle + manuelle Umsatz-Korrektur nicht drucken */
+  .card:has(#k_pay_bar),
+  .card:has(#corr_date){
+    display:none !important;
+  }
+}
+</style>
+
+
+<style id="oks-extra-controls-style">
+  @media print{
+    .card:has(#oksMissingDaysList),
+    .card:has(#k_driver_ordu),
+    .card:has(#corr_date){
+      display:none !important;
+    }
+  }
+</style>
+
+
+<style id="ordu-print-official-style">
+@media print{
+  @page{ size:A4 landscape; margin:8mm; }
+  html, body{
+    background:#fff !important; color:#000 !important;
+    width:100% !important; height:auto !important; zoom:0.88;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  #pageYear{ display:none !important; }
+  #pageMonth{ display:block !important; }
+  #orduPrintHeader{
+    display:block !important;
+    margin:0 0 6mm 0 !important;
+    padding:0 0 3mm 0 !important;
+    border-bottom:1px solid #000 !important;
+    color:#000 !important;
+    font-family:Arial,Helvetica,sans-serif !important;
+  }
+  #orduPrintHeader .title{ font-size:16px !important; font-weight:700 !important; margin:0 0 2mm 0 !important; }
+  #orduPrintHeader .line{ font-size:10.5px !important; line-height:1.35 !important; }
+  .noPrint, .card.noPrint, button, .btn, input, select, textarea{
+    display:none !important; visibility:hidden !important;
+  }
+  .layout, .main, .wrap, .container,
+  .leftcol, .rightcol, .left, .right{
+    display:block !important; float:none !important;
+    width:100% !important; max-width:none !important;
+    margin:0 !important; padding:0 !important;
+  }
+  table{
+    width:100% !important; border-collapse:collapse !important;
+    page-break-inside:avoid !important; break-inside:avoid !important;
+    font-size:10px !important; margin:0 !important;
+  }
+  thead, tbody, tfoot, tr, td, th{
+    page-break-inside:avoid !important; break-inside:avoid !important;
+  }
+  th, td{ padding:3px 4px !important; color:#000 !important; }
+  thead th{ font-size:10px !important; font-weight:700 !important; }
+  #orduPrintSummary{
+    display:block !important; margin-top:5mm !important; padding-top:3mm !important;
+    border-top:1px solid #000 !important; font-size:10px !important; line-height:1.35 !important; color:#000 !important;
+  }
+}
+</style>
+
+
+<style id="ordu-final-print-singlepage-fix">
+@media print{
+  @page { size: A4 landscape; margin: 8mm; }
+
+  html, body{
+    background:#fff !important;
+    color:#000 !important;
+    width:auto !important;
+    height:auto !important;
+    overflow:visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body{
+    padding:0 !important;
+    margin:0 !important;
+  }
+
+  /* Hide interactive UI only */
+  .topbar, .hint, .tabs, .noPrint, button, input, select, textarea{
+    display:none !important;
+    visibility:hidden !important;
+  }
+
+  /* Print only month page */
+  #pageYear{ display:none !important; }
+  #pageMonth{ display:block !important; }
+
+  /* Break the screen grid and print as one vertical flow */
+  .layout{
+    display:block !important;
+    width:100% !important;
+    max-width:none !important;
+    margin:0 !important;
+    padding:0 !important;
+  }
+
+  .layout > .card,
+  .layout > .leftcol,
+  .layout > .rightcol,
+  .leftcol,
+  .rightcol{
+    display:block !important;
+    float:none !important;
+    width:100% !important;
+    max-width:none !important;
+    margin:0 !important;
+    padding:0 !important;
+    border:0 !important;
+    box-shadow:none !important;
+    background:#fff !important;
+  }
+
+  /* Keep only the first summary card from the right column in print */
+  .rightcol > .card{
+    display:none !important;
+  }
+  .rightcol > .card:first-child{
+    display:block !important;
+    margin-top:4mm !important;
+    padding-top:2mm !important;
+    border-top:1px solid #000 !important;
+  }
+
+  /* Table should use the page width */
+  #kb, table{
+    width:100% !important;
+    border-collapse:collapse !important;
+    table-layout:fixed !important;
+    page-break-inside:avoid !important;
+    break-inside:avoid !important;
+  }
+
+  thead{ display:table-header-group !important; }
+  tbody{ display:table-row-group !important; }
+  tfoot{ display:table-footer-group !important; }
+
+  tr{
+    page-break-inside:avoid !important;
+    break-inside:avoid !important;
+  }
+
+  th, td{
+    border:1px solid #000 !important;
+    color:#000 !important;
+    background:#fff !important;
+    font-size:9.2px !important;
+    line-height:1.15 !important;
+    padding:2px 3px !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+
+  .title{
+    color:#000 !important;
+  }
+
+  .kpi{
+    display:grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap:2mm !important;
+  }
+
+  .kpi .box{
+    border:1px solid #000 !important;
+    background:#fff !important;
+    padding:2mm !important;
+    min-height:auto !important;
+  }
+
+  .chipRow{
+    display:flex !important;
+    flex-wrap:wrap !important;
+    gap:2mm !important;
+    margin-top:2mm !important;
+  }
+
+  .chip{
+    border:1px solid #000 !important;
+    background:#fff !important;
+    color:#000 !important;
+    padding:1.2mm 2mm !important;
+    font-size:9px !important;
+  }
+
+  .mini, .foot{
+    color:#000 !important;
+    font-size:8.5px !important;
+  }
+}
+</style>
+
+
+<style id="chatgpt-print-input-visible-fix">
+@media print{
+  /* keep manually entered table inputs visible in print */
+  #kb .pdfCellInput{
+    display:block !important;
+    visibility:visible !important;
+    width:100% !important;
+    border:0 !important;
+    background:transparent !important;
+    color:#000 !important;
+    padding:0 !important;
+    margin:0 !important;
+    font-size:9.2px !important;
+    line-height:1.15 !important;
+    text-align:center !important;
+    -webkit-appearance:none !important;
+    appearance:none !important;
+    box-shadow:none !important;
+  }
+
+  /* generic input hiding must not hide the table inputs */
+  input.pdfCellInput{
+    display:block !important;
+    visibility:visible !important;
+  }
+}
+</style>
+
+
+<style id="oks-final-print-header-clean">
+@media print{
+  #orduPrintHeader, #orduPrintSummary, #bertaPrintHeader, #ozkanPrintHeader, #sarikayaHeader, #kamilHeader, #printHeader, #printSummary {
+    display:none !important;
+  }
+  #oksPrintBrandHeader{
+    display:block !important;
+    margin:0 0 5mm 0 !important;
+    padding:0 0 3mm 0 !important;
+    border-bottom:1px solid #000 !important;
+    color:#000 !important;
+    font-family:Arial,Helvetica,sans-serif !important;
+  }
+  #oksPrintBrandHeader .oksLogo{
+    display:inline-block !important;
+    font-size:20px !important;
+    font-weight:900 !important;
+    letter-spacing:1px !important;
+    border:1px solid #000 !important;
+    padding:2px 8px !important;
+    border-radius:8px !important;
+    margin-bottom:2mm !important;
+  }
+  #oksPrintBrandHeader .line1{
+    font-size:15px !important;
+    font-weight:700 !important;
+    margin-top:1mm !important;
+  }
+  #oksPrintBrandHeader .line2{
+    font-size:10px !important;
+    line-height:1.35 !important;
+    margin-top:1mm !important;
+  }
+}
+</style>
+
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b0b0b">
+
+<style id="oksTankFinalCss">
+#oksTankReceiptCard .oksTankBox{border:1px solid #2a2a2a;border-radius:14px;padding:12px;background:#0b0b0b;margin-bottom:12px}
+#oksTankReceiptCard .oksTankTitle{color:#ffd400;font-weight:900;margin-bottom:8px;font-size:15px}
+#oksTankReceiptCard .oksMini{font-size:13px;color:#9aa0a6;line-height:1.35;margin:6px 0}
+#oksTankReceiptCard .oksActions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+#oksTankReceiptCard .oksBtn{background:#ffd400;color:#000;border:0;border-radius:10px;padding:10px 12px;font-weight:900;cursor:pointer}
+#oksTankReceiptCard .oksBtn.secondary{background:#2a2a2a;color:#fff}
+#oksTankReceiptCard .oksBtn.danger{background:#b00020;color:#fff}
+#oksTankReceiptCard .oksFields{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+#oksTankReceiptCard .oksField{display:flex;flex-direction:column;gap:4px}
+#oksTankReceiptCard .oksField label{font-size:12px;color:#9aa0a6}
+#oksTankReceiptCard .oksField input{padding:10px;border-radius:10px;border:1px solid #2a2a2a;background:#0a0a0a;color:#fff;font-weight:900}
+#oksTankReceiptCard .oksPreviewGrid{display:grid;grid-template-columns:160px 1fr;gap:12px;align-items:start}
+#oksTankReceiptCard #oksTankFinalPreview{display:none;max-width:160px;max-height:230px;object-fit:contain;background:#fff;border:1px solid #333;border-radius:10px}
+#oksTankReceiptCard .oksStatus{font-size:12px;margin-top:8px;color:#9aa0a6}.oksStatus.good{color:#b9f6ca}.oksStatus.bad{color:#ffb4a2}.oksStatus.warn{color:#ffd400}
+#oksTankReceiptCard .oksMonthFolders{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+#oksTankReceiptCard .oksFolderBtn{background:#111;color:#fff;border:1px solid #333;border-radius:12px;padding:10px;text-align:left;font-weight:900;cursor:pointer}
+#oksTankReceiptCard .oksFolderBtn.active{border-color:#ffd400;color:#ffd400}.oksFolderBtn small{display:block;color:#9aa0a6;font-weight:700;margin-top:3px}
+#oksTankReceiptCard .oksGallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+#oksTankReceiptCard .oksCatFolders{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+#oksTankReceiptCard .oksCatBtn{background:#090909;color:#fff;border:1px solid #333;border-radius:12px;padding:10px;text-align:left;font-weight:900;cursor:pointer}
+#oksTankReceiptCard .oksCatBtn.active{border-color:#ffd400;color:#ffd400}.oksCatBtn small{display:block;color:#9aa0a6;font-weight:700;margin-top:3px}
+#oksTankReceiptCard .oksDocList{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px}
+#oksTankReceiptCard .oksCard{border:1px solid #333;border-radius:12px;background:#070707;padding:8px}.oksCard img{width:100%;height:150px;object-fit:contain;background:#fff;border-radius:8px}.oksCardMeta{font-size:12px;color:#fff;margin-top:6px;line-height:1.35}.oksCardBtns{display:flex;gap:6px;margin-top:6px}.oksCardBtns button{font-size:11px;border:0;border-radius:8px;padding:7px;background:#2a2a2a;color:#fff}.oksCardBtns button.danger{background:#b00020}
+#oksTankFinalRaw{display:none;white-space:pre-wrap;max-height:180px;overflow:auto;background:#050505;border:1px solid #333;border-radius:10px;padding:8px;color:#9aa0a6;font-size:11px}
+#steuerZipCard .oksZipFolders{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}.oksZipFolder{border:1px solid #333;border-radius:10px;padding:8px;background:#070707;font-size:12px}.oksZipFolder b{color:#ffd400}
+@media(max-width:520px){#oksTankReceiptCard .oksPreviewGrid{grid-template-columns:1fr}#oksTankReceiptCard .oksMonthFolders,#oksTankReceiptCard .oksGallery,#oksTankReceiptCard .oksCatFolders,#steuerZipCard .oksZipFolders{grid-template-columns:1fr}}
+@media print{#oksTankReceiptCard{display:none!important}}
+</style>
+
+</head>
+<body>
+
+<div id="oksPrintBrandHeader" style="display:none">
+  <div class="oksLogo">OKS</div>
+  <div class="line1">Taxi Kassenbuch</div>
+  <div class="line2">Ordu Kassenbuchsysteme</div>
+</div>
+
+<div id="orduPrintHeader" style="display:none"></div>
+
+<div class="topbar noPrint">
+  <div class="logo">OKS</div>
+
+  <input type="file" id="csvFile" accept=".csv,.pdf,application/pdf,text/csv" />
+  <button class="btn" onclick="importCSV()">Import</button>
+<button class="btn secondary" onclick="window.print()">Drucken (A4 Querformat)</button>
+  <button class="btn danger" onclick="resetYear()">Alles löschen</button>
+</div>
+
+<div class="hint noPrint">
+  <b>Wichtig:</b> CSV-Import fragt zuerst die Spalten ab. Für FMS/UPORTAL werden die echten Buchungszeilen aus <span class="ok">TXT_GESAMTBETRAG</span> übernommen. <span class="warn">Tagesabschlüsse, Taxameter-Infozeilen und Summenzeilen</span> werden ignoriert; Storno/Korrektur bleibt rechnerisch enthalten.
+</div>
+
+<div class="card noPrint" id="companyProfileCard">
+  <div class="title">Unternehmer-Profil für Drucklayout</div>
+  <div class="mini">Diese Angaben erscheinen oben im Kassenbuch-Ausdruck. Sie werden nur lokal in dieser App gespeichert.</div>
+  <div class="row" style="margin-top:10px">
+    <div class="field">
+      <label>Unternehmer / Inhaber</label>
+      <input id="profile_owner" placeholder="z.B. Max Mustermann" />
+    </div>
+    <div class="field">
+      <label>Unternehmensname</label>
+      <input id="profile_company" placeholder="z.B. Mustermann Taxiunternehmen" />
+    </div>
+    <div class="field">
+      <label>Firmenanschrift</label>
+      <input id="profile_address" placeholder="Straße, PLZ Ort" />
+    </div>
+    <div class="field" style="max-width:170px">
+      <button class="btn" type="button" onclick="saveCompanyProfile()">Profil speichern</button>
+    </div>
+  </div>
+  <div class="mini" id="profile_status" style="margin-top:8px"></div>
+</div>
+<div class="oksLicenseInfo noPrint" id="oksLicenseInfo">
+  <b>Lizenzinformation:</b> OKS Kassenbuch- und Steuerberater-System · Konzept, Lizenz und Nutzungsrechte: <b>Hasan Ordu</b>. Nutzung, Weitergabe, Integration oder kommerzielle Verwertung nur mit Zustimmung des Lizenzträgers.
+</div>
+
+
+<div class="tabs noPrint" id="tabs"></div>
+
+<div id="pageYear" class="card" style="display:none">
+  <div class="title">Jahresübersicht 2026</div>
+  <table id="yearTable">
+    <thead>
+      <tr>
+        <th class="left">Monat</th>
+        <th>Umsatz</th>
+        <th>7% Umsatz</th>
+        <th>19% Umsatz</th>
+        <th>7% MwSt</th>
+        <th>19% MwSt</th>
+        <th>USt gesamt</th>
+        <th>Vorsteuer</th>
+        <th>Noch zu zahlen</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot>
+      <tr>
+        <th class="left">SUMME</th>
+        <th id="y_sum_u">0,00</th>
+        <th id="y_sum_u7">0,00</th>
+        <th id="y_sum_u19">0,00</th>
+        <th id="y_sum_v7">0,00</th>
+        <th id="y_sum_v19">0,00</th>
+        <th id="y_sum_ust">0,00</th>
+        <th id="y_sum_vst">0,00</th>
+        <th id="y_sum_rest">0,00</th>
+      </tr>
+    </tfoot>
+  </table>
+  <div class="foot">Tipp: Für jeden Monat CSV importieren. Du kannst jederzeit zwischen Monaten wechseln.</div>
+</div>
+
+<div id="pageMonth" style="display:none">
+  <div class="layout">
+    <div class="card">
+      <div class="title" id="m_title">Monat</div>
+      <table id="kb">
+        <thead>
+          <tr>
+            <th class="left">Datum</th>
+            <th>Gesamt</th>
+            <th>7% Umsatz</th>
+            <th>19% Umsatz</th>
+            <th>7% MwSt</th>
+            <th>19% MwSt</th>
+            <th>Tank</th>
+            <th>R1</th>
+            <th>R2</th>
+            <th>R3</th>
+            <th>Vorsteuer</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr>
+            <th class="left">SUMME</th>
+            <th id="sum_total">0,00</th>
+            <th id="sum_u7">0,00</th>
+            <th id="sum_u19">0,00</th>
+            <th id="sum_v7">0,00</th>
+            <th id="sum_v19">0,00</th>
+            <th id="sum_tank">0,00</th>
+            <th id="sum_r1">0,00</th>
+            <th id="sum_r2">0,00</th>
+            <th id="sum_r3">0,00</th>
+            <th id="sum_vor">0,00</th>
+          </tr>
+        </tfoot>
+      </table>
+      <div class="foot">Druck ist Schwarz-Weiß: Hintergrund wird automatisch weiß.</div>
+    </div>
+
+    <div class="rightcol">
+      <div class="card">
+        <div class="title">Monat & MwSt</div>
+        <div class="kpi">
+          <div class="box"><div class="label">Monat</div><div class="val" id="k_month">–</div></div>
+          <div class="box"><div class="label">Tage</div><div class="val" id="k_days">0</div></div>
+          <div class="box"><div class="label">Umsatzsteuer</div><div class="val" id="k_ust">0,00</div></div>
+          <div class="box"><div class="label">Vorsteuer</div><div class="val" id="k_vst">0,00</div></div>
+        </div>
+        <div class="chipRow" style="margin-top:10px">
+          <div class="chip">Abzuführen: <b id="k_abzuf">0,00</b></div>
+          <div class="chip">Bereits bezahlt: <b id="k_bz">0,00</b></div>
+          <div class="chip">Noch zu zahlen: <b id="k_rest">0,00</b></div>
+        </div>
+        <div class="mini" id="k_warn" style="margin-top:8px"></div>
+      </div>
+
+      
+      <div class="card">
+        <div class="title">Zahlungsarten Kontrolle</div>
+        <div class="kpi">
+          <div class="box"><div class="label">Bar</div><div class="val" id="k_pay_bar">0,00</div></div>
+          <div class="box"><div class="label">Kartenzahlung gesamt</div><div class="val" id="k_pay_ext">0,00</div></div>
+          <div class="box"><div class="label">Uber</div><div class="val" id="k_pay_uber">0,00</div></div>
+          <div class="box"><div class="label">Bolt</div><div class="val" id="k_pay_bolt">0,00</div></div>
+          <div class="box"><div class="label">Payment-Zahlungen</div><div class="val" id="k_pay_eigen">0,00</div></div>
+          <div class="box"><div class="label">Rechnungsfahrten</div><div class="val" id="k_pay_rech">0,00</div></div>
+        </div>
+        <div class="chipRow" style="margin-top:10px">
+          <div class="chip">PDF Umsatz: <b id="k_pdf_total">0,00</b></div>
+          <div class="chip">Kassenbuch: <b id="k_book_total">0,00</b></div>
+          <div class="chip">Differenz: <b id="k_diff_total">0,00</b></div>
+          
+        </div>
+        <div class="mini" style="margin-top:8px">Nur Kontrolle aus der PDF. Keine Auswirkung auf Kassenbuch oder MwSt.</div>
+      </div>
+
+      <div class="card noPrint">
+        <div class="title">Warnung / Kontrolle</div>
+        <div class="mini">Tage ohne PDF-Einträge im ausgewählten Monat. Nur Kontrolle für dich; keine Auswirkung auf Berechnung oder Ausdruck.</div>
+        <div id="oksMissingDaysList" class="mini" style="margin-top:8px">Noch keine Daten geladen.</div>
+      </div>
+
+      <div class="card noPrint">
+        <div class="title">Fahrer-Anteil Kontrolle</div>
+        <div class="kpi" id="driverCards">
+          <div class="box"><div class="label">Noch keine Fahrer</div><div class="val">0,00</div></div>
+          <div class="box"><div class="label">Gesamt Fahrer</div><div class="val">0,00</div></div>
+        </div>
+        <div class="mini" style="margin-top:8px">Nur Kontrollblock für dich. Keine Auswirkung auf Kassenbuch oder Ausdruck.</div>
+      </div>
+
+      <div class="card noPrint">
+        <div class="title">Manuelle Umsatz-Korrektur (nur wenn nötig)</div>
+        <div class="mini">Für seltene Sonderfälle. Positive oder negative Korrektur auf einen Tag buchen, ohne den PDF-Import kaputt zu machen.</div>
+        <div class="row" style="margin-top:10px">
+          <div class="field">
+            <label>Datum (TT.MM.JJJJ)</label>
+            <input id="corr_date" placeholder="z.B. 15.02.2026" />
+          </div>
+          <div class="field">
+            <label>Steuersatz</label>
+            <select id="corr_rate">
+              <option value="7">7 %</option>
+              <option value="19">19 %</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Korrektur brutto (+ / -)</label>
+            <input id="corr_amt" placeholder="z.B. -10,00 oder 25,50" />
+          </div>
+          <div class="field" style="max-width:170px">
+            <button class="btn" type="button" onclick="saveRevenueCorrection()">Korrektur speichern</button>
+          </div>
+        </div>
+        <div class="mini" id="corr_status" style="margin-top:8px"></div>
+      </div>
+
+
+      
+
+<script>
+  const YEAR = 2026;
+  const MONTHS = [
+    {k:'year', name:'Jahr'},
+    {k:'01', name:'Januar'},
+    {k:'02', name:'Februar'},
+    {k:'03', name:'März'},
+    {k:'04', name:'April'},
+    {k:'05', name:'Mai'},
+    {k:'06', name:'Juni'},
+    {k:'07', name:'Juli'},
+    {k:'08', name:'August'},
+    {k:'09', name:'September'},
+    {k:'10', name:'Oktober'},
+    {k:'11', name:'November'},
+    {k:'12', name:'Dezember'},
+  ];
+
+  const fmt = new Intl.NumberFormat('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+  function setText(id,val){ document.getElementById(id).textContent = val; }
+  function byId(id){ return document.getElementById(id); }
+  function ensureValidDate(v){
+    if(!v) return false;
+    const m = String(v).trim().match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+    if(!m) return false;
+    const dd = Number(m[1]), mm = Number(m[2]), yy = Number(m[3]);
+    const d = new Date(yy, mm-1, dd);
+    return d.getFullYear() === yy && d.getMonth() === (mm-1) && d.getDate() === dd;
+  }
+
+
+  // --- Robust number parsing: "1.234,56" | "1234,56" | "1234.56" | "1,234.56"
+  function toNum(s){
+    if(s===undefined || s===null) return 0;
+    let t=(''+s).trim().replace(/\u00A0/g,' ').replace(/"/g,'');
+    if(!t) return 0;
+
+    // Keep only digits, separators, minus
+    t = t.replace(/[^0-9.,\-]/g,'');
+    if(!t) return 0;
+
+    const hasComma = t.includes(',');
+    const hasDot = t.includes('.');
+
+    if(hasComma && hasDot){
+      // Decide decimal separator by last occurrence
+      if(t.lastIndexOf(',') > t.lastIndexOf('.')){
+        // comma is decimal -> remove dots as thousands
+        t = t.replace(/\./g,'').replace(',','.');
+      } else {
+        // dot is decimal -> remove commas as thousands
+        t = t.replace(/,/g,'');
+      }
+    } else if(hasComma && !hasDot){
+      // comma decimal, maybe thousands with dots already removed
+      t = t.replace(',', '.');
+    } else {
+      // dot decimal or integer -> keep
+    }
+    const v = parseFloat(t);
+    return isNaN(v) ? 0 : v;
+  }
+
+  function taxFromGross7(g){ return g*7/107; }
+  function taxFromGross19(g){ return g*19/119; }
+
+  // --- CSV parsing with delimiter detection (comma or semicolon)
+  function detectDelimiter(sampleLine){
+    // crude but works: more semicolons than commas -> semicolon
+    const c=(sampleLine.match(/,/g)||[]).length;
+    const s=(sampleLine.match(/;/g)||[]).length;
+    return s>c ? ';' : ',';
+  }
+  function parseLine(line, delim){
+    const out=[]; let cur='', inQ=false;
+    for(let i=0;i<line.length;i++){
+      const ch=line[i];
+      if(ch === '"'){
+        if(inQ && line[i+1]==='"'){ cur+='"'; i++; }
+        else inQ=!inQ;
+      } else if(ch===delim && !inQ){
+        out.push(cur); cur='';
+      } else cur+=ch;
+    }
+    out.push(cur);
+    return out;
+  }
+
+  function findHeader(lines){
+    for(let i=0;i<Math.min(lines.length,20);i++){
+      if(lines[i].includes('TXT_')) return i;
+    }
+    return 0;
+  }
+
+  function findHeaderIndices(header){
+    const idx={};
+    header.forEach((h,i)=>{
+      const t=(h||'').toString();
+      if(t.includes('TXT_ZEITPUNKT')) idx.zeit=i;
+      if(t.includes('TXT_GESAMTBETRAG')) idx.ges=i;
+      if(t.includes('TXT_BUCHUNGSART')) idx.buch=i;
+      if(t.includes('TXT_BELEGTEXT')) idx.text=i;
+      if(t.includes('TXT_ZAHLUNGSMITTEL')) idx.zahl=i;
+    });
+    return idx;
+  }
+
+  function extractUSDate(s){
+    // 2/2/2026 4:51
+    const m = (s||'').match(/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/);
+    if(!m) return null;
+    return {mm:+m[1], dd:+m[2], yy:+m[3]};
+  }
+  function toDEDateKey(yy,mm,dd){
+    return String(dd).padStart(2,'0')+'.'+String(mm).padStart(2,'0')+'.'+yy;
+  }
+
+  // --- Storage schema
+  // state = { months: { "01": {daily:{dateKey:...}, expenses:{dateKey:{tank,r1,r2,r3}}, photos:{id:dataUrl}, meta:{warnings}} , ... }, ui:{selected:'01'} }
+  function loadState(){
+    try{
+      return JSON.parse(localStorage.getItem('oks_state_2026')||'{}') || {};
+    }catch(e){ return {}; }
+  }
+  function saveState(state){
+    localStorage.setItem('oks_state_2026', JSON.stringify(state));
+  }
+  function ensureState(){
+    const s=loadState();
+    if(!s.months) s.months={};
+    if(!s.ui) s.ui={selected:'year'};
+    if(!s.profile) s.profile={owner:'', company:'', address:''};
+    if(typeof s.profile.owner !== 'string') s.profile.owner='';
+    if(typeof s.profile.company !== 'string') s.profile.company='';
+    if(typeof s.profile.address !== 'string') s.profile.address='';
+    // init months
+    for(const m of MONTHS){
+      if(m.k==='year') continue;
+      if(!s.months[m.k]) s.months[m.k]={daily:{}, expenses:{}, photos:{}, meta:{warnings:[], unknownRateCount:0}, paystats:{bar:0,ext:0,uber:0,bolt:0,eigen:0,rech:0,total:0}, corrections:{import7:0,import19:0,manual:{}}, driverstats:{items:{},total:0}};
+      if(!s.months[m.k].daily) s.months[m.k].daily={};
+      if(!s.months[m.k].expenses) s.months[m.k].expenses={};
+      if(!s.months[m.k].photos) s.months[m.k].photos={};
+      if(!s.months[m.k].meta) s.months[m.k].meta={warnings:[], unknownRateCount:0};
+      if(!s.months[m.k].paystats) s.months[m.k].paystats={bar:0,ext:0,uber:0,bolt:0,eigen:0,rech:0,total:0};
+      if(!s.months[m.k].corrections) s.months[m.k].corrections={import7:0,import19:0,manual:{}};
+      if(!s.months[m.k].driverstats) s.months[m.k].driverstats={ordu:0,zadran:0,other:0,total:0};
+    }
+    saveState(s);
+    return s;
+  }
+
+  function resetYear(){
+    if(!confirm('Wirklich ALLES löschen (alle Monate + Fotos + Ausgaben)?')) return;
+    localStorage.removeItem('oks_state_2026');
+    location.reload();
+  }
+
+  // --- Backup / Restore
+  function downloadBackup(withPhotos){
+    const s=ensureState();
+    const clone = JSON.parse(JSON.stringify(s));
+    if(!withPhotos){
+      // remove photos to keep file small
+      for(const k of Object.keys(clone.months||{})){
+        clone.months[k].photos = {};
+      }
+    }
+    const blob=new Blob([JSON.stringify(clone,null,2)], {type:'application/json'});
+    const a=document.createElement('a');
+    const suffix = withPhotos ? 'MIT_FOTOS' : 'OHNE_FOTOS';
+    a.download = `OKS_Kassenbuch_Backup_${YEAR}_${suffix}.json`;
+    a.href = URL.createObjectURL(blob);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function loadBackup(){
+    const inp=byId('backupFile');
+    inp.onchange=async (e)=>{
+      const f=e.target.files && e.target.files[0];
+      if(!f) return;
+      try{
+        const text=await f.text();
+        const obj=JSON.parse(text);
+        if(!obj || !obj.months){ alert('Backup ungültig'); return; }
+        localStorage.setItem('oks_state_2026', JSON.stringify(obj));
+        alert('Backup geladen. Seite wird neu geladen.');
+        location.reload();
+      }catch(err){
+        alert('Backup konnte nicht geladen werden.');
+      }
+    };
+    inp.value='';
+    inp.click();
+  }
+
+  function getCompanyProfile(){
+    const s=ensureState();
+    return s.profile || {owner:'', company:'', address:''};
+  }
+
+  function saveCompanyProfile(){
+    const s=ensureState();
+    s.profile = {
+      owner: (byId('profile_owner')?.value || '').trim(),
+      company: (byId('profile_company')?.value || '').trim(),
+      address: (byId('profile_address')?.value || '').trim()
+    };
+    saveState(s);
+    renderCompanyProfile();
+    refreshPrintHeaderSafe();
+    const el=byId('profile_status');
+    if(el) el.innerHTML = '<span class="ok">✓ Unternehmer-Profil gespeichert. Der Druckkopf wurde aktualisiert.</span>';
+  }
+
+  function renderCompanyProfile(){
+    const p=getCompanyProfile();
+    if(byId('profile_owner')) byId('profile_owner').value = p.owner || '';
+    if(byId('profile_company')) byId('profile_company').value = p.company || '';
+    if(byId('profile_address')) byId('profile_address').value = p.address || '';
+  }
+
+  function escHtml(v){
+    return String(v||'').replace(/[&<>"']/g, function(ch){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch];
+    });
+  }
+
+  function refreshPrintHeaderSafe(){
+    if(typeof window.refreshOksPrintHeader === 'function') window.refreshOksPrintHeader();
+  }
+
+  // --- UI: Tabs
+  function buildTabs(){
+    const t=byId('tabs');
+    t.innerHTML='';
+    const s=ensureState();
+    for(const m of MONTHS){
+      const b=document.createElement('button');
+      b.className='tab'+(s.ui.selected===m.k?' active':'');
+      b.textContent = m.k==='year' ? 'Jahr' : m.name;
+      b.onclick=()=>selectTab(m.k);
+      t.appendChild(b);
+    }
+  }
+
+  function selectTab(key){
+    const s=ensureState();
+    s.ui.selected=key;
+    saveState(s);
+    buildTabs();
+    render();
+  }
+
+  function getSelectedMonthKey(){
+    const s=ensureState();
+    return s.ui.selected || 'year';
+  }
+
+  // --- Render year dashboard
+  function monthTotals(monthKey){
+    const s=ensureState();
+    const m=s.months[monthKey];
+    const daily=m.daily||{};
+    const expenses=m.expenses||{};
+    const corrections=m.corrections||{import7:0,import19:0,manual:{}};
+
+    let sumTotal=0,sumU7=0,sumU19=0,sumV7=0,sumV19=0;
+    for(const v of Object.values(daily)){
+      sumTotal += v.totalGross||0;
+      sumU7 += v.gross7||0;
+      sumU19 += v.gross19||0;
+      sumV7 += v.vat7||0;
+      sumV19 += v.vat19||0;
+    }
+    const importCorr7 = corrections.import7||0;
+    const importCorr19 = corrections.import19||0;
+    sumTotal += importCorr7 + importCorr19;
+    sumU7 += importCorr7;
+    sumU19 += importCorr19;
+    sumV7 += taxFromGross7(importCorr7);
+    sumV19 += taxFromGross19(importCorr19);
+
+    let sumTank=0,sumR1=0,sumR2=0,sumR3=0;
+    for(const ex of Object.values(expenses)){
+      sumTank += ex.tank||0; sumR1 += ex.r1||0; sumR2 += ex.r2||0; sumR3 += ex.r3||0;
+    }
+    const vor = taxFromGross19(sumTank+sumR1+sumR2+sumR3);
+    const ust = sumV7+sumV19;
+    const rest = ust - vor;
+    return {sumTotal,sumU7,sumU19,sumV7,sumV19,ust,vor,rest};
+  }
+
+  function renderYear(){
+    byId('pageYear').style.display='block';
+    byId('pageMonth').style.display='none';
+
+    const tbody=byId('yearTable').querySelector('tbody');
+    tbody.innerHTML='';
+
+    let yU=0,yU7=0,yU19=0,yV7=0,yV19=0,yUST=0,yVST=0,yREST=0;
+
+    for(const m of MONTHS){
+      if(m.k==='year') continue;
+      const t=monthTotals(m.k);
+      yU+=t.sumTotal; yU7+=t.sumU7; yU19+=t.sumU19; yV7+=t.sumV7; yV19+=t.sumV19; yUST+=t.ust; yVST+=t.vor; yREST+=t.rest;
+
+      const tr=document.createElement('tr');
+      tr.innerHTML=`
+        <td class="left">${m.name}</td>
+        <td>${fmt.format(t.sumTotal)}</td>
+        <td>${fmt.format(t.sumU7)}</td>
+        <td>${fmt.format(t.sumU19)}</td>
+        <td>${fmt.format(t.sumV7)}</td>
+        <td>${fmt.format(t.sumV19)}</td>
+        <td>${fmt.format(t.ust)}</td>
+        <td>${fmt.format(t.vor)}</td>
+        <td>${fmt.format(t.rest)}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    setText('y_sum_u', fmt.format(yU));
+    setText('y_sum_u7', fmt.format(yU7));
+    setText('y_sum_u19', fmt.format(yU19));
+    setText('y_sum_v7', fmt.format(yV7));
+    setText('y_sum_v19', fmt.format(yV19));
+    setText('y_sum_ust', fmt.format(yUST));
+    setText('y_sum_vst', fmt.format(yVST));
+    setText('y_sum_rest', fmt.format(yREST));
+  }
+
+  // --- Render month
+
+  function getAllMonthDates(daily, expenses){
+    return Array.from(new Set([
+      ...Object.keys(daily || {}),
+      ...Object.keys(expenses || {})
+    ])).sort((a,b)=>{
+      const [da,ma,ya]=a.split('.').map(Number);
+      const [db,mb,yb]=b.split('.').map(Number);
+      return new Date(ya,ma-1,da)-new Date(yb,mb-1,db);
+    });
+  }
+
+  function saveExpenseCell(monthKey, dateKey, kind, rawValue){
+    const s=ensureState();
+    const m=s.months[monthKey];
+    if(!m.expenses[dateKey]) m.expenses[dateKey]={tank:0,r1:0,r2:0,r3:0};
+    const val = toNum(rawValue);
+    m.expenses[dateKey][kind] = val > 0 ? val : 0;
+    saveState(s);
+  }
+
+
+  function oksGetAllDaysOfMonth(monthKey, year){
+    const mm = Number(monthKey);
+    const days = new Date(year, mm, 0).getDate();
+    const out = [];
+    for(let d=1; d<=days; d++){
+      out.push(String(d).padStart(2,'0') + '.' + String(mm).padStart(2,'0') + '.' + year);
+    }
+    return out;
+  }
+
+  function renderMonth(monthKey){
+    byId('pageYear').style.display='none';
+    byId('pageMonth').style.display='block';
+
+    const mObj = MONTHS.find(x=>x.k===monthKey);
+    byId('m_title').textContent = `${mObj ? mObj.name : 'Monat'} ${YEAR}`;
+    setText('k_month', `${mObj ? mObj.name : '–'} ${YEAR}`);
+
+    const s=ensureState();
+    const m=s.months[monthKey];
+    const daily=m.daily||{};
+    const expenses=m.expenses||{};
+    const meta=m.meta||{warnings:[], unknownRateCount:0};
+    const corrections=m.corrections||{import7:0,import19:0,manual:{}};
+    const manualCorr=corrections.manual||{};
+
+    // Build rows for ALL days of the month so missing/import-free days stay visible
+    const dates=oksGetAllDaysOfMonth(monthKey, YEAR);
+
+    const tbody=byId('kb').querySelector('tbody');
+    tbody.innerHTML='';
+
+    let sumTotal=0,sumU7=0,sumU19=0,sumV7=0,sumV19=0;
+    for(const date of dates){
+      const base=daily[date] || {totalGross:0,gross7:0,gross19:0,vat7:0,vat19:0};
+      const adj=manualCorr[date] || {gross7:0,gross19:0};
+      const v = {
+        totalGross:(base.totalGross||0)+(adj.gross7||0)+(adj.gross19||0),
+        gross7:(base.gross7||0)+(adj.gross7||0),
+        gross19:(base.gross19||0)+(adj.gross19||0),
+        vat7:(base.vat7||0)+taxFromGross7(adj.gross7||0),
+        vat19:(base.vat19||0)+taxFromGross19(adj.gross19||0)
+      };
+      const ex=expenses[date] || {tank:0,r1:0,r2:0,r3:0};
+      const vor = taxFromGross19((ex.tank||0)+(ex.r1||0)+(ex.r2||0)+(ex.r3||0));
+
+      sumTotal += v.totalGross||0; sumU7 += v.gross7||0; sumU19 += v.gross19||0; sumV7 += v.vat7||0; sumV19 += v.vat19||0;
+
+      const tr=document.createElement('tr');
+      tr.innerHTML=`
+        <td class="left">${date}</td>
+        <td>${fmt.format(v.totalGross||0)}</td>
+        <td>${fmt.format(v.gross7||0)}</td>
+        <td>${fmt.format(v.gross19||0)}</td>
+        <td>${fmt.format(v.vat7||0)}</td>
+        <td>${fmt.format(v.vat19||0)}</td>
+        <td><input class="pdfCellInput" data-kind="tank" data-date="${date}" value="${(ex.tank||0)?fmt.format(ex.tank||0):''}" inputmode="decimal" /></td>
+        <td><input class="pdfCellInput" data-kind="r1" data-date="${date}" value="${(ex.r1||0)?fmt.format(ex.r1||0):''}" inputmode="decimal" /></td>
+        <td><input class="pdfCellInput" data-kind="r2" data-date="${date}" value="${(ex.r2||0)?fmt.format(ex.r2||0):''}" inputmode="decimal" /></td>
+        <td><input class="pdfCellInput" data-kind="r3" data-date="${date}" value="${(ex.r3||0)?fmt.format(ex.r3||0):''}" inputmode="decimal" /></td>
+        <td>${fmt.format(vor||0)}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+
+    tbody.querySelectorAll('.pdfCellInput').forEach(inp=>{
+      const saveNow = ()=>{
+        saveExpenseCell(monthKey, inp.dataset.date, inp.dataset.kind, inp.value);
+        renderMonth(monthKey);
+      };
+      inp.addEventListener('change', saveNow);
+      inp.addEventListener('blur', saveNow);
+      inp.addEventListener('keydown', (e)=>{
+        if(e.key==='Enter'){
+          e.preventDefault();
+          inp.blur();
+        }
+      });
+    });
+
+    // Totals
+    const sumTank = Object.values(expenses).reduce((a,x)=>a+(x.tank||0),0);
+    const sumR1 = Object.values(expenses).reduce((a,x)=>a+(x.r1||0),0);
+    const sumR2 = Object.values(expenses).reduce((a,x)=>a+(x.r2||0),0);
+    const sumR3 = Object.values(expenses).reduce((a,x)=>a+(x.r3||0),0);
+    const importCorr7 = corrections.import7||0;
+    const importCorr19 = corrections.import19||0;
+    const manualSum7 = Object.values(manualCorr).reduce((a,x)=>a+(x.gross7||0),0);
+    const manualSum19 = Object.values(manualCorr).reduce((a,x)=>a+(x.gross19||0),0);
+    
+    sumTotal += importCorr7 + importCorr19;
+    sumU7 += importCorr7;
+    sumU19 += importCorr19;
+    sumV7 += taxFromGross7(importCorr7);
+    sumV19 += taxFromGross19(importCorr19);
+
+    const vor = taxFromGross19(sumTank+sumR1+sumR2+sumR3);
+    const ust = sumV7+sumV19;
+
+    setText('sum_total', fmt.format(sumTotal));
+    setText('sum_u7', fmt.format(sumU7));
+    setText('sum_u19', fmt.format(sumU19));
+    setText('sum_v7', fmt.format(sumV7));
+    setText('sum_v19', fmt.format(sumV19));
+    setText('sum_tank', fmt.format(sumTank));
+    setText('sum_r1', fmt.format(sumR1));
+    setText('sum_r2', fmt.format(sumR2));
+    setText('sum_r3', fmt.format(sumR3));
+    setText('sum_vor', fmt.format(vor));
+
+    setText('k_days', String(dates.length));
+    setText('k_ust', fmt.format(ust));
+    setText('k_vst', fmt.format(vor));
+    setText('k_abzuf', fmt.format(ust));
+    setText('k_bz', fmt.format(vor));
+    setText('k_rest', fmt.format(ust - vor));
+
+
+    // Zahlungsarten Kontrolle
+    const pay = m.paystats || {bar:0,ext:0,uber:0,bolt:0,eigen:0,rech:0,total:0};
+    setText('k_pay_bar', fmt.format(pay.bar||0));
+    setText('k_pay_ext', fmt.format(pay.ext||0));
+    if(byId('k_pay_uber')) setText('k_pay_uber', fmt.format(pay.uber||0));
+    if(byId('k_pay_bolt')) setText('k_pay_bolt', fmt.format(pay.bolt||0));
+    setText('k_pay_eigen', fmt.format(pay.eigen||0));
+    setText('k_pay_rech', fmt.format(pay.rech||0));
+    setText('k_pdf_total', fmt.format(pay.total||0));
+    setText('k_book_total', fmt.format(sumTotal));
+    setText('k_diff_total', fmt.format((pay.total||0) - sumTotal));
+
+    // Fahrer-Anteil Kontrolle
+    const drv = m.driverstats || {items:{},total:0};
+    const driverCards = byId('driverCards');
+    if(driverCards){
+      let entries = Object.entries(drv.items || {});
+      entries = entries.filter(x => (x[1]||0) !== 0).sort((a,b)=>(b[1]||0)-(a[1]||0));
+      if(!entries.length){
+        driverCards.innerHTML = '<div class="box"><div class="label">Noch keine Fahrer</div><div class="val">0,00</div></div>' +
+          '<div class="box"><div class="label">Gesamt Fahrer</div><div class="val">' + fmt.format(drv.total||0) + '</div></div>';
+      } else {
+        driverCards.innerHTML = entries.map(([name,val]) =>
+          '<div class="box"><div class="label">' + name + '</div><div class="val">' + fmt.format(val||0) + '</div></div>'
+        ).join('') + '<div class="box"><div class="label">Gesamt Fahrer</div><div class="val">' + fmt.format(drv.total||0) + '</div></div>';
+      }
+    }
+
+    // Fehlende Tage nur als Warnung für dich
+    const presentDays = Object.keys(daily||{}).filter(k=>{
+      const d = daily[k] || {};
+      return (d.totalGross||0)!==0 || (d.gross7||0)!==0 || (d.gross19||0)!==0;
+    });
+    const missingDays = dates.filter(d=>!presentDays.includes(d));
+    const warnEl = byId('oksMissingDaysList');
+    if(warnEl){
+      if(!missingDays.length) warnEl.innerHTML = '<span class="ok">✓ Für diesen Monat fehlen keine Tage.</span>';
+      else warnEl.textContent = 'Tage ohne PDF-Einträge: ' + missingDays.join(', ');
+    }
+
+    // Warnings
+    let warn = '';
+    if(meta.unknownRateCount>0){
+      warn += `⚠ ${meta.unknownRateCount} Position(en) ohne erkannte Steuerart (7%/19%) wurden nur in "Gesamt" gezählt.`;
+    }
+    if(meta.warnings && meta.warnings.length){
+      warn += (warn?'<br/>':'') + meta.warnings.slice(0,2).map(x=>'⚠ '+x).join('<br/>');
+    }
+    byId('k_warn').innerHTML = warn ? warn : '<span class="ok">✓ Import ok</span>';
+
+    // Prefill date input to month
+    const mm=monthKey;
+    const d=new Date();
+    const today = String(d.getDate()).padStart(2,'0')+'.'+mm+'.'+YEAR;
+    if(!byId('ex_date').value) byId('ex_date').value = today;
+    if(byId('corr_date') && !byId('corr_date').value) byId('corr_date').value = today;
+  }
+
+  function render(){
+    const key=getSelectedMonthKey();
+    if(key==='year') renderYear();
+    else renderMonth(key);
+  }
+
+  // --- Import PDF (Unternehmerportal Umsatzliste) - SIGNIERT addieren, STORNO auf Ursprungs-Tag zurück
+  async function importCSV(){
+    const f=byId('csvFile').files[0];
+    if(!f){ alert('CSV auswählen'); return; }
+
+    const name=(f.name||'').toLowerCase();
+    if(!name.endsWith('.csv')){
+      alert('Bitte die CSV-Umsatzliste aus dem Unternehmerportal auswählen.');
+      return;
+    }
+
+    const rawText = await f.text();
+    if(!rawText || !rawText.trim()){
+      alert('CSV ist leer.');
+      return;
+    }
+
+    const allLines = rawText.split(/\r?\n/).filter(x => x.trim());
+    if(allLines.length < 2){
+      alert('CSV Struktur nicht erkannt.');
+      return;
+    }
+    const delim = detectDelimiter(allLines[0]);
+    const headerLineIndex = findHeader(allLines);
+    const headers = parseCsvLineFlexible(allLines[headerLineIndex], delim);
+
+    const mapping = await askCsvColumnMapping(headers);
+    if(!mapping) return;
+
+    const required = ['driver','date','beleg','amount'];
+    const missing = required.filter(k => mapping[k] === undefined || mapping[k] === null || mapping[k] < 0);
+    if(missing.length){
+      alert('Bitte mindestens Fahrer, Datum/Zeit, Belegtext und Fahrpreis/Gesamtbetrag auswählen.');
+      return;
+    }
+
+    const s = ensureState();
+    const perMonth = {};
+
+    function ensureMonth(mm){
+      if(!perMonth[mm]) perMonth[mm]={
+        daily:{},
+        paystats:{bar:0,ext:0,uber:0,bolt:0,eigen:0,rech:0,total:0},
+        driverstats:{items:{},total:0},
+        corrections:{import7:0,import19:0}
+      };
+      return perMonth[mm];
+    }
+
+    function dailyObj(monthKey, dateKey){
+      const bucket = ensureMonth(monthKey);
+      if(!bucket.daily[dateKey]) bucket.daily[dateKey]={totalGross:0,gross7:0,gross19:0,vat7:0,vat19:0};
+      return bucket.daily[dateKey];
+    }
+
+    function cleanDriverName(text){
+      const t = (text || '').trim();
+      return t || 'Unbekannt';
+    }
+
+    function parseGermanDate(text){
+      const m = String(text||'').match(/(\d{2})\.(\d{2})\.(\d{4})/);
+      if(!m) return null;
+      return {dd:m[1], mm:m[2], yy:m[3]};
+    }
+
+    function parseTimeToMinutes(text){
+      const m = String(text||'').match(/\b(\d{1,2}):(\d{2})\b/);
+      if(!m) return null;
+      const h=Number(m[1]), min=Number(m[2]);
+      if(h<0 || h>23 || min<0 || min>59) return null;
+      return h*60+min;
+    }
+
+    function addDaysDE(dateObj, offset){
+      const d = new Date(Number(dateObj.yy), Number(dateObj.mm)-1, Number(dateObj.dd));
+      d.setDate(d.getDate()+offset);
+      return {dd:String(d.getDate()).padStart(2,'0'), mm:String(d.getMonth()+1).padStart(2,'0'), yy:String(d.getFullYear())};
+    }
+
+    function dateByRideStart(baseDateText, rideStart){
+      const base = parseGermanDate(baseDateText);
+      if(!base) return null;
+      const baseMin = parseTimeToMinutes(baseDateText);
+      const rideMin = parseTimeToMinutes(rideStart);
+      let shifted = base;
+      // Tagesabschlüsse gelten 00:00-00:00: maßgeblich ist der Fahrtbeginn aus dem Belegtext.
+      // Falls CSV-Zeit und Fahrtbeginn über Mitternacht auseinanderlaufen, wird sauber um einen Tag korrigiert.
+      if(baseMin !== null && rideMin !== null){
+        if(rideMin - baseMin > 12*60) shifted = addDaysDE(base, -1);
+        else if(baseMin - rideMin > 12*60) shifted = addDaysDE(base, 1);
+      }
+      return shifted;
+    }
+
+    function parseRideFromBelegtext(text){
+      const t = String(text||'').replace(/\s+/g,' ').trim();
+      const m = t.match(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})\s*\/\s*([\d.,]+)\s*km\s*\/\s*([\d.,]+)\s*(?:eur|€)?/i);
+      if(!m) return null;
+      return {start:m[1], end:m[2], km:toNum(m[3]), gross:toNum(m[4]), source:'belegtext'};
+    }
+
+    function detectPaykind(bookingType, paymentText, orderType, belegtext, helperText){
+      const low = [bookingType, paymentText, orderType, belegtext, helperText].join(' ').toLowerCase();
+      if(low.includes('eigener uber-fahrt') || low.includes('uber')) return 'uber';
+      if(low.includes('eigener bolt-fahrt') || low.includes('bolt')) return 'bolt';
+      if(low.includes('ext. kartenterminal') || low.includes('kartenterminal') || low.includes('paymentservice-zahlung ext') || low.includes('paymentservic ext') || low.includes('ec-karte') || low.includes('ec karte') || low.includes('visa') || low.includes('mastercard') || low.includes('karte') || low.includes('card')) return 'ext';
+      if(low.includes('barzahlung') || low.includes('bar') || low.includes('cash')) return 'bar';
+      if(low.includes('rechnung') || low.includes('lieferschein') || low.includes('kranken') || low.includes('freenow') || low.includes('sofortrechnung') || low.includes('aok') || low.includes('db regio') || low.includes('ssb') || low.includes('sozialamt') || low.includes('easy airport') || low.includes('technikerkrankenkasse') || low.includes('zugkunft') || low.includes('bustransfer')) return 'rech';
+      if(low.includes('paymentservice-zahlung') || low.includes('paymentservic eigener') || low.includes('payment') || low.includes('paypal') || low.includes('sumup') || low.includes('stripe')) return 'eigen';
+      return 'rech';
+    }
+
+    const rows = [];
+    let hasRideBelegtext = false;
+    const col = (cols,k) => mapping[k] >= 0 ? (cols[mapping[k]] || '') : '';
+
+    for(let r=headerLineIndex+1; r<allLines.length; r++){
+      const cols = parseCsvLineFlexible(allLines[r], delim);
+      if(!cols.length) continue;
+      const booking = col(cols,'booking');
+      const status = col(cols,'status');
+      const belegtext = col(cols,'beleg');
+      const paymentText = col(cols,'pay');
+      const orderType = col(cols,'order');
+      const driverName = col(cols,'driver');
+      const zeitpunkt = col(cols,'date');
+      const leistungszeit = col(cols,'leistung');
+      const amountRaw = col(cols,'amount');
+      const tour = col(cols,'tour');
+      const lowAll = cols.join(' ').toLowerCase();
+      if(/tagesabschluss|tagessumme|summe tagesabschluss/.test(lowAll)) continue;
+      const ride = parseRideFromBelegtext(belegtext);
+      if(ride && ride.gross > 0) hasRideBelegtext = true;
+      rows.push({r, cols, booking, status, belegtext, paymentText, orderType, driverName, zeitpunkt, leistungszeit, amountRaw, tour, ride});
+    }
+
+    function helperTextFor(row){
+      for(let j=row.r+1; j<Math.min(allLines.length, row.r+5); j++){
+        const hcols = parseCsvLineFlexible(allLines[j], delim);
+        if(!hcols || !hcols.length) continue;
+        const hAmount = mapping.amount >= 0 ? (hcols[mapping.amount] || '') : '';
+        const hGross = toNum(hAmount);
+        const rowText = hcols.join(' ');
+        const isHelper = /taxifahrt|paymentservice|preismeldung|rechnung|lieferschein|kranken|freenow|kartenterminal|uber|bolt|bar/i.test(rowText);
+        if(!isHelper) continue;
+        if(hGross > 0 && row.ride && Math.abs(hGross - row.ride.gross) > 0.03) continue;
+        return rowText;
+      }
+      return '';
+    }
+
+    let foundAny = 0;
+    const seen = new Set();
+
+    // FMS/UPORTAL korrigierter Import:
+    // Nicht die Beträge aus "Taxameter Ein" / Belegtext-Zeilen auslesen.
+    // Diese Zeilen sind nur Taxameter-Infos und haben keinen echten TXT_GESAMTBETRAG.
+    // Verbindlich sind die CSV-Buchungszeilen mit ausgewählter Betragsspalte.
+    const tax7Index = guessColumn(headers, ['7%']);
+    const tax19Index = guessColumn(headers, ['19%']);
+    const fahrzeugIndex = guessColumn(headers, ['TXT_FAHRZEUG/de','fahrzeug']);
+
+    function parseDateFromSelected(row){
+      // Wichtig: Standardmäßig zählt der FMS-Export nach TXT_ZEITPUNKT/de.
+      // Für alte CSVs mit Belegtext-Fahrtbeginn wird nur bei Bedarf sauber über den Fahrtbeginn korrigiert.
+      const baseText = row.zeitpunkt || row.leistungszeit;
+      if(row.ride && row.ride.start){
+        const shifted = dateByRideStart(baseText, row.ride.start);
+        if(shifted) return shifted;
+      }
+      return parseGermanDate(baseText);
+    }
+
+    function isStornoRow(row, gross){
+      const low = [row.booking,row.status,row.belegtext,row.paymentText,row.orderType].join(' ').toLowerCase();
+      return gross < 0 || /storno|storniert/.test(low);
+    }
+
+    for(const row of rows){
+      // Betrag bevorzugt aus der ausgewählten Gesamtbetrag-Spalte.
+      // Für ältere Januar–März-CSV-Versionen darf die Betragsspalte fehlen/anders heißen;
+      // dann wird als Fallback der Fahrpreis aus dem Belegtext (Uhrzeit / km / EUR) genommen.
+      let gross = toNum(row.amountRaw);
+      const grossFromRideText = row.ride && row.ride.gross ? row.ride.gross : 0;
+      if(!(Math.abs(gross) > 0.0001) && grossFromRideText > 0) gross = grossFromRideText;
+      if(!(Math.abs(gross) > 0.0001)) continue;
+
+      const lowRow = [row.booking,row.belegtext,row.status,row.paymentText,row.orderType].join(' ').toLowerCase();
+      if(/tagesabschluss|tagessumme/.test(lowRow)) continue;
+      if(/^\s*summe\s*$/i.test(row.belegtext) || /\.\.\.davon/i.test(row.belegtext)) continue;
+
+      // Kein harter Fahrzeug-Filter mehr: ältere UPORTAL-Dateien/Januar–März können die
+      // Fahrzeugspalte leer oder anders befüllt haben. Zusammenfassungen werden bereits über
+      // Datum, Summe/Tagesabschluss und Betrag/Belegtext-Filter ausgeschlossen.
+
+      const rideDate = parseDateFromSelected(row);
+      if(!rideDate) continue;
+      if(Number(rideDate.yy) !== YEAR) continue;
+
+      const monthKey = String(rideDate.mm).padStart(2,'0');
+      const dateKey = `${rideDate.dd}.${monthKey}.${rideDate.yy}`;
+      const uniq = [row.r,row.tour,dateKey,row.booking,row.belegtext,row.amountRaw,row.driverName,row.status].join('|');
+      if(seen.has(uniq)) continue;
+      seen.add(uniq);
+
+      const tax7Val = tax7Index >= 0 ? toNum(row.cols[tax7Index] || '') : 0;
+      const tax19Val = tax19Index >= 0 ? toNum(row.cols[tax19Index] || '') : 0;
+      let gross7 = 0, gross19 = 0, vat7 = 0, vat19 = 0;
+
+      if(Math.abs(tax19Val) > 0.0001 && Math.abs(tax7Val) <= 0.0001){
+        gross19 = gross;
+        vat19 = tax19Val;
+      } else if(Math.abs(tax7Val) > 0.0001 && Math.abs(tax19Val) <= 0.0001){
+        gross7 = gross;
+        vat7 = tax7Val;
+      } else if(Math.abs(tax7Val) > 0.0001 && Math.abs(tax19Val) > 0.0001){
+        // Sehr seltener Mischfall: Brutto nach Steueranteilen aufteilen.
+        const approxGross7 = tax7Val * 107 / 7;
+        const approxGross19 = tax19Val * 119 / 19;
+        gross7 = approxGross7;
+        gross19 = approxGross19;
+        vat7 = tax7Val;
+        vat19 = tax19Val;
+      } else if(row.ride && row.ride.km){
+        // Alte OKS-Formel für ältere CSV-Strukturen: wenn keine 7%/19%-Spalten vorhanden
+        // oder leer sind, entscheidet der Belegtext über Kilometer: bis 50 km = 7%, ab 50 km = 19%.
+        if(row.ride.km >= 50){ gross19 = gross; vat19 = taxFromGross19(gross); }
+        else { gross7 = gross; vat7 = taxFromGross7(gross); }
+      } else {
+        // 0%-Umsatz/Durchläufer/Trinkgeld: im Gesamt behalten, keine MwSt.
+        gross7 = gross;
+        vat7 = 0;
+      }
+
+      const bucket = ensureMonth(monthKey);
+      const isStorno = isStornoRow(row, gross);
+
+      if(isStorno){
+        // Storno/Korrektur läuft nur im Monats-Hintergrund: keine negative Tageszeile im sichtbaren Kassenbuch.
+        // Die Monats-/Jahressumme bleibt trotzdem zentgenau, weil die Korrektur als Import-Korrektur geführt wird.
+        bucket.corrections.import7 += gross7 || 0;
+        bucket.corrections.import19 += gross19 || 0;
+        if(!(Math.abs(gross7) > 0.0001) && !(Math.abs(gross19) > 0.0001)){
+          bucket.corrections.import7 += gross || 0;
+        }
+      } else {
+        const dObj = dailyObj(monthKey, dateKey);
+        dObj.totalGross += gross;
+        dObj.gross7 += gross7;
+        dObj.gross19 += gross19;
+        dObj.vat7 += vat7;
+        dObj.vat19 += vat19;
+      }
+
+      const helperText = '';
+      const paykind = detectPaykind(row.booking, row.paymentText, row.orderType, row.belegtext, helperText);
+      const driverkind = cleanDriverName(row.driverName);
+
+      if(paykind === 'bar') bucket.paystats.bar += gross;
+      else if(paykind === 'ext') bucket.paystats.ext += gross;
+      else if(paykind === 'uber') bucket.paystats.uber += gross;
+      else if(paykind === 'bolt') bucket.paystats.bolt += gross;
+      else if(paykind === 'eigen') bucket.paystats.eigen += gross;
+      else if(paykind === 'rech') bucket.paystats.rech += gross;
+      bucket.paystats.total += gross;
+
+      if(!bucket.driverstats.items) bucket.driverstats.items = {};
+      bucket.driverstats.items[driverkind] = (bucket.driverstats.items[driverkind] || 0) + gross;
+      bucket.driverstats.total += gross;
+      foundAny++;
+    }
+    if(!foundAny){ alert('Keine passenden Fahrten in der CSV gefunden.'); return; }
+    const importedMonths = Object.keys(perMonth).sort();
+    for(const mm of importedMonths){
+      const target=s.months[mm];
+      target.daily = {};
+      target.meta = target.meta || {warnings:[], unknownRateCount:0};
+      target.meta.unknownRateCount = 0;
+      target.meta.warnings = [];
+      target.paystats = {bar:0,ext:0,uber:0,bolt:0,eigen:0,rech:0,total:0};
+      target.driverstats = {items:{},total:0};
+      target.corrections = target.corrections || {import7:0,import19:0,manual:{}};
+      target.corrections.import7 = 0;
+      target.corrections.import19 = 0;
+    }
+    for(const mm of importedMonths){
+      const bucket=perMonth[mm];
+      const target=s.months[mm];
+      for(const [dateKey,v] of Object.entries(bucket.daily)){
+        target.daily[dateKey] = {totalGross:v.totalGross||0,gross7:v.gross7||0,gross19:v.gross19||0,vat7:v.vat7||0,vat19:v.vat19||0};
+      }
+      target.paystats = bucket.paystats;
+      target.driverstats = bucket.driverstats;
+      target.corrections = target.corrections || {import7:0,import19:0,manual:{}};
+      target.corrections.import7 = bucket.corrections.import7||0;
+      target.corrections.import19 = bucket.corrections.import19||0;
+    }
+    if(importedMonths.length===1) s.ui.selected = importedMonths[0];
+    saveState(s);
+    render();
+    alert('CSV importiert: FMS-Buchungszeilen übernommen, Tagesabschluss/Taxameter-Infozeilen ignoriert, Storno/Korrektur läuft im Hintergrund und wird nicht als negativer Tagesumsatz angezeigt.');
+  }
+
+  function parseCsvLineFlexible(line, delim){
+    const out = [];
+    let cur = '';
+    let inQuotes = false;
+    for(let i=0;i<line.length;i++){
+      const ch = line[i];
+      if(ch === '"'){
+        if(inQuotes && line[i+1] === '"'){ cur += '"'; i++; }
+        else inQuotes = !inQuotes;
+      } else if(ch === delim && !inQuotes){ out.push(cur); cur = ''; }
+      else cur += ch;
+    }
+    out.push(cur);
+    return out.map(v => (v || '').trim());
+  }
+
+  function guessColumn(headers, words){
+    const norm = x => String(x||'').toLowerCase().replace(/[^a-z0-9äöüß]/g,'');
+    const hs = headers.map(norm);
+    for(const w of words){
+      const nw = norm(w);
+      const exact = hs.findIndex(h => h === nw || h.includes(nw));
+      if(exact >= 0) return exact;
+    }
+    return -1;
+  }
+
+  function askCsvColumnMapping(headers){
+    return new Promise(resolve => {
+      const fields = [
+        ['driver','Fahrer / Fahreranzeige', ['TXT_FAHRERNAME/de','fahrername','fahrer','driver']],
+        ['pay','Zahlungsquelle / Zahlungsmittel', ['TXT_ZAHLUNGSMITTEL/de','zahlungsmittel','zahlungsquelle','payment']],
+        ['beleg','Belegtext mit Uhrzeit / km / Fahrpreis', ['TXT_BELEGTEXT/de','belegtext','beleg','description']],
+        ['amount','Fahrpreis / Gesamtbetrag', ['TXT_GESAMTBETRAG/de','gesamtbetrag','betrag','fahrpreis','amount']],
+        ['date','Datum/Zeit der Zeile', ['TXT_ZEITPUNKT/de','zeitpunkt','datum','date']],
+        ['leistung','Leistungszeitpunkt (optional)', ['TXT_LEISTUNGSZEITPUNKT/de','leistungszeitpunkt']],
+        ['booking','Buchungsart (optional)', ['TXT_BUCHUNGSART/de','buchungsart']],
+        ['order','Auftragsart (optional)', ['TXT_AUFTRAGSART/de','auftragsart']],
+        ['status','Status (optional)', ['TXT_STATUS/de','status']],
+        ['tour','Tournummer (optional)', ['TXT_TOURNUMMER/de','tournummer','tour']]
+      ];
+      const overlay = document.createElement('div');
+      overlay.className = 'csvMapOverlay';
+      const optionsHtml = (selected, optional=false) => {
+        let html = optional ? '<option value="-1">Nicht verwenden</option>' : '<option value="-1">Bitte auswählen</option>';
+        headers.forEach((h,i)=>{ html += `<option value="${i}" ${i===selected?'selected':''}>${String(i+1).padStart(2,'0')} – ${escapeHtml(h||'(leer)')}</option>`; });
+        return html;
+      };
+      overlay.innerHTML = `<div class="csvMapBox">
+        <h3>CSV-Spalten zuordnen</h3>
+        <div class="csvMapHint">Bitte wähle manuell, welche CSV-Spalte die App verwenden soll. Vorschläge sind bereits vorausgewählt, können aber geändert werden. Für FMS/UPORTAL wird die Betragsspalte verwendet; Taxameter-Infozeilen und Tagesabschlüsse werden ignoriert.</div>
+        <div class="csvMapGrid">
+          ${fields.map(([key,label,guess]) => {
+            const optional = label.includes('optional') || key==='pay';
+            const g = guessColumn(headers, guess);
+            return `<label for="csvmap_${key}">${label}</label><select id="csvmap_${key}" data-key="${key}">${optionsHtml(g, optional)}</select>`;
+          }).join('')}
+        </div>
+        <div class="csvMapActions"><button class="btn secondary" id="csvMapCancel" type="button">Abbrechen</button><button class="btn" id="csvMapOk" type="button">Import starten</button></div>
+      </div>`;
+      document.body.appendChild(overlay);
+      const close = (val) => { overlay.remove(); resolve(val); };
+      overlay.querySelector('#csvMapCancel').onclick = () => close(null);
+      overlay.querySelector('#csvMapOk').onclick = () => {
+        const m = {};
+        overlay.querySelectorAll('select[data-key]').forEach(sel => { m[sel.dataset.key] = Number(sel.value); });
+        close(m);
+      };
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+
+
+  function saveRevenueCorrection(){
+    const key=getSelectedMonthKey();
+    if(key==='year'){ alert('Bitte einen Monat auswählen.'); return; }
+
+    const date=(byId('corr_date')?.value || '').trim();
+    const rate=String(byId('corr_rate')?.value || '7');
+    const amtRaw=(byId('corr_amt')?.value || '').trim();
+    const amt=toNum(amtRaw);
+
+    if(!ensureValidDate(date)){
+      alert('Datum im Format TT.MM.JJJJ');
+      return;
+    }
+    if(!amtRaw || Number.isNaN(amt) || amt===0){
+      alert('Korrektur-Betrag eingeben');
+      return;
+    }
+
+    const s=ensureState();
+    const m=s.months[key];
+    if(!m.corrections) m.corrections={import7:0,import19:0,manual:{}};
+    if(!m.corrections.manual) m.corrections.manual={};
+    if(!m.corrections.manual[date]) m.corrections.manual[date]={gross7:0,gross19:0};
+
+    if(rate==='19') m.corrections.manual[date].gross19 += amt;
+    else m.corrections.manual[date].gross7 += amt;
+
+    saveState(s);
+    if(byId('corr_amt')) byId('corr_amt').value='';
+    if(byId('corr_status')) byId('corr_status').textContent='Korrektur gespeichert: ' + date + ' / ' + rate + '% / ' + fmt.format(amt);
+    renderMonth(key);
+  }
+
+  function saveExpense(){
+    const key=getSelectedMonthKey();
+    if(key==='year'){ alert('Bitte einen Monat auswählen.'); return; }
+
+    const date=byId('ex_date').value.trim();
+    const kind=byId('ex_kind').value;
+    const amt=toNum(byId('ex_amt').value);
+    if(!ensureValidDate(date)){ alert('Datum im Format TT.MM.JJJJ'); return; }
+    if(!(amt>0)){ alert('Betrag eingeben'); return; }
+
+    const s=ensureState();
+    const m=s.months[key];
+    if(!m.expenses[date]) m.expenses[date]={tank:0,r1:0,r2:0,r3:0};
+    m.expenses[date][kind]=(m.expenses[date][kind]||0)+amt;
+    saveState(s);
+
+    byId('ex_amt').value='';
+    byId('photoStatus').textContent='Betrag gespeichert.';
+    renderMonth(key);
+  }
+
+  function photoId(monthKey, date, kind){
+    return `${monthKey}_${date}_${kind}_${Date.now()}`;
+  }
+
+  function openCamera(){
+    const key=getSelectedMonthKey();
+    if(key==='year'){ alert('Bitte einen Monat auswählen.'); return; }
+    const date=byId('ex_date').value.trim();
+    const kind=byId('ex_kind').value;
+    if(!ensureValidDate(date)){ alert('Datum im Format TT.MM.JJJJ'); return; }
+    const cam=byId('camInput');
+    cam.onchange=(ev)=>handlePhoto(ev, key, date, kind);
+    cam.value='';
+    cam.click();
+  }
+
+  function openGallery(){
+    const key=getSelectedMonthKey();
+    if(key==='year'){ alert('Bitte einen Monat auswählen.'); return; }
+    const date=byId('ex_date').value.trim();
+    const kind=byId('ex_kind').value;
+    if(!ensureValidDate(date)){ alert('Datum im Format TT.MM.JJJJ'); return; }
+    const gal=byId('galInput');
+    gal.onchange=(ev)=>handlePhoto(ev, key, date, kind);
+    gal.value='';
+    gal.click();
+  }
+
+  function handlePhoto(ev, monthKey, date, kind){
+    const f=ev.target.files && ev.target.files[0];
+    if(!f){ byId('photoStatus').textContent='Kein Foto gewählt.'; return; }
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const s=ensureState();
+      const m=s.months[monthKey];
+      const id=photoId(monthKey,date,kind);
+      // store base64 (can be large). Use "Backup + Fotos" to preserve.
+      m.photos[id]=reader.result;
+      saveState(s);
+      byId('photoStatus').textContent='Foto gespeichert (lokal).';
+    };
+    reader.readAsDataURL(f);
+  }
+
+  // --- Boot
+  (function(){
+    ensureState();
+    renderCompanyProfile();
+    buildTabs();
+    render();
+  })();
+</script>
+
+
+<div id="orduPrintSummary" style="display:none">
+  <div id="orduPrintCompany"><b>Unternehmer:</b> –</div>
+  <div id="orduPrintAddress">–</div>
+  <div id="orduPrintMonth">Monat: –</div>
+  <div id="orduPrintCreated">Erstellt am: –</div>
+</div>
+
+<script id="ordu-print-script">
+(function(){
+  function selectedMonthLabel(){
+    try{
+      const s = JSON.parse(localStorage.getItem('oks_state_2026')||'{}') || {};
+      const key = s.ui && s.ui.selected;
+      if(!key || key === 'year') return 'Monat: -';
+      if(typeof MONTHS !== 'undefined'){
+        const m = MONTHS.find(x => x.k === key);
+        if(m) return 'Monat: ' + m.name + ' ' + YEAR;
+      }
+      return 'Monat: ' + key + '.' + YEAR;
+    }catch(e){ return 'Monat: -'; }
+  }
+  function todayLabel(){
+    const d = new Date();
+    return String(d.getDate()).padStart(2,'0') + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + d.getFullYear();
+  }
+  function esc(v){
+    return String(v||'').replace(/[&<>"']/g, function(ch){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch];
+    });
+  }
+  function getProfile(){
+    try{
+      const s = JSON.parse(localStorage.getItem('oks_state_2026')||'{}') || {};
+      return s.profile || {owner:'', company:'', address:''};
+    }catch(e){ return {owner:'', company:'', address:''}; }
+  }
+  function refreshPrintHeader(){
+    const monthLine = selectedMonthLabel();
+    const createdLine = 'Erstellt am: ' + todayLabel();
+    const p = getProfile();
+    const owner = (p.owner||'').trim();
+    const company = (p.company||'').trim();
+    const address = (p.address||'').trim();
+    const companyLine = company && owner ? company + ' – ' + owner : (company || owner || 'Unternehmer nicht eingetragen');
+    const addressLine = address || 'Firmenanschrift nicht eingetragen';
+    const h = document.getElementById('orduPrintHeader');
+    if(h){
+      h.innerHTML = ''
+        + '<div class="title">Taxi Kassenbuch</div>'
+        + '<div class="line"><b>Unternehmer:</b> ' + esc(companyLine) + '</div>'
+        + '<div class="line">' + esc(addressLine) + '</div>'
+        + '<div class="line">' + esc(monthLine) + '</div>'
+        + '<div class="line">' + esc(createdLine) + '</div>';
+    }
+    const brand = document.getElementById('oksPrintBrandHeader');
+    if(brand){
+      const line1 = brand.querySelector('.line1');
+      const line2 = brand.querySelector('.line2');
+      if(line1) line1.textContent = companyLine;
+      if(line2) line2.textContent = addressLine;
+    }
+    const co = document.getElementById('orduPrintCompany');
+    const ad = document.getElementById('orduPrintAddress');
+    const m = document.getElementById('orduPrintMonth');
+    const c = document.getElementById('orduPrintCreated');
+    if(co) co.innerHTML = '<b>Unternehmer:</b> ' + esc(companyLine);
+    if(ad) ad.textContent = addressLine;
+    if(m) m.textContent = monthLine;
+    if(c) c.textContent = createdLine;
+  }
+  window.refreshOksPrintHeader = refreshPrintHeader;
+  window.addEventListener('beforeprint', refreshPrintHeader);
+  document.addEventListener('DOMContentLoaded', function(){ setTimeout(refreshPrintHeader, 300); });
+})();
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+
+<div class="card noPrint" id="steuerZipCard">
+  <div class="title">Steuerberater ZIP-Export</div>
+  <div class="mini" style="margin-bottom:8px">
+    PDF-Dateien auswählen, unten prüfen und danach als ZIP-Paket erstellen. Die Dateien werden automatisch nach Dateinamen sortiert.
+  </div>
+  <div class="row" style="margin-top:10px">
+    <div class="field">
+      <label>PDF-Dateien auswählen</label>
+      <input type="file" id="steuerZipFiles" multiple accept="application/pdf,.pdf" onchange="oksAddSteuerZipFiles(event)">
+    </div>
+    <button class="btn" onclick="oksCreateSteuerZip()">ZIP erstellen</button>
+    <button class="btn secondary" onclick="oksClearSteuerZipFiles()">Liste leeren</button>
+  </div>
+  <div id="steuerZipSummary" class="mini" style="margin-top:8px">Noch keine Dateien ausgewählt.</div>
+  <div id="steuerZipList" style="margin-top:8px"></div>
+</div>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+</script>
+
+<script id="oks-steuer-zip-script">
+const oksSteuerZipFiles = [];
+
+function oksGuessSteuerFolder(fileName){
+  const n = String(fileName || '').toLowerCase();
+
+  if(n.includes('konto') || n.includes('bank') || n.includes('auszug') || n.includes('kontoauszug')){
+    return 'Kontoauszüge';
+  }
+  if(n.includes('volt')){
+    return 'Volt';
+  }
+  if(n.includes('rechnung') || n.includes('rechnungen') || n.includes('invoice') || n.includes('einkauf')){
+    return 'Rechnungen';
+  }
+  if(n.includes('beleg') || n.includes('quittung') || n.includes('bon')){
+    return 'Belege';
+  }
+  if(n.includes('kassenbuch')){
+    return 'Kassenbuch';
+  }
+  if(n.includes('einzelfahrt') || n.includes('fahrtnachweis') || n.includes('umsatzliste')){
+    return 'Einzelfahrtnachweise';
+  }
+  if(n.includes('tank') || n.includes('kraftstoff') || n.includes('diesel')){
+    return 'Tankbelege';
+  }
+  return 'Sonstiges';
+}
+
+function oksAddSteuerZipFiles(event){
+  const files = Array.from(event.target.files || []);
+  for(const file of files){
+    if(!oksSteuerZipFiles.some(x => x.name === file.name && x.size === file.size && x.lastModified === file.lastModified)){
+      oksSteuerZipFiles.push(file);
+    }
+  }
+  event.target.value = '';
+  oksRenderSteuerZipFiles();
+}
+
+function oksRemoveSteuerZipFile(index){
+  oksSteuerZipFiles.splice(index,1);
+  oksRenderSteuerZipFiles();
+}
+
+function oksClearSteuerZipFiles(){
+  oksSteuerZipFiles.length = 0;
+  oksRenderSteuerZipFiles();
+}
+
+function oksRenderSteuerZipFiles(){
+  const summary = document.getElementById('steuerZipSummary');
+  const list = document.getElementById('steuerZipList');
+  if(!summary || !list) return;
+
+  if(!oksSteuerZipFiles.length){
+    summary.textContent = 'Noch keine Dateien ausgewählt.';
+    list.innerHTML = '';
+    return;
+  }
+
+  const folderCounts = {};
+  for(const f of oksSteuerZipFiles){
+    const folder = oksGuessSteuerFolder(f.name);
+    folderCounts[folder] = (folderCounts[folder] || 0) + 1;
+  }
+
+  summary.textContent = oksSteuerZipFiles.length + ' Datei(en) ausgewählt: ' +
+    Object.entries(folderCounts).map(([k,v]) => k + ': ' + v).join(' | ');
+
+  list.innerHTML = oksSteuerZipFiles.map((f,i) => {
+    const folder = oksGuessSteuerFolder(f.name);
+    return '<div class="box" style="margin-top:6px">' +
+      '<div class="label">' + folder + '</div>' +
+      '<div style="font-weight:800;word-break:break-word">' + f.name + '</div>' +
+      '<div class="mini">' + Math.round((f.size || 0) / 1024) + ' KB</div>' +
+      '<button class="btn secondary" style="margin-top:6px" onclick="oksRemoveSteuerZipFile(' + i + ')">Entfernen</button>' +
+      '</div>';
+  }).join('');
+}
+
+async function oksCreateSteuerZip(){
+  if(!oksSteuerZipFiles.length){
+    alert('Bitte zuerst PDF-Dateien auswählen.');
+    return;
+  }
+  if(typeof JSZip === 'undefined'){
+    alert('ZIP-Funktion konnte nicht geladen werden. Bitte Internetverbindung prüfen und Seite neu laden.');
+    return;
+  }
+
+  const zip = new JSZip();
+  for(const file of oksSteuerZipFiles){
+    const folder = oksGuessSteuerFolder(file.name);
+    zip.folder(folder).file(file.name, file);
+  }
+
+  const blob = await zip.generateAsync({type:'blob'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth()+1).padStart(2,'0');
+  const d = String(now.getDate()).padStart(2,'0');
+  a.download = 'Steuerberater_Export_' + y + '-' + m + '-' + d + '.zip';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+</script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script id="oksTankReceiptOnlyPatch">
+(function(){
+'use strict';
+if(window.__OKS_TANK_RECEIPT_ONLY_PATCH_V2__) return; window.__OKS_TANK_RECEIPT_ONLY_PATCH_V2__=true;
+const YEAR=2026;
+const MONTH_NAMES=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const LS_REC='oks_tank_receipts_v_original_profile_meta_v2';
+const LS_DOC='oks_month_archive_docs_v1';
+const DB_NAME='oks_tank_receipt_images_db_v2';
+const DB_STORE='images';
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,'0');
+let currentImage='', currentRaw='', ocrBusy=false, pickerOpen=false, openFolder=(new Date().getMonth()), openCategory='Tankbelege';
+const ARCHIVE_CATS=['Tankbelege','Kassenbuch','Rechnungen','Einzelfahrtnachweise','Kontoauszuege','CSV_Umsatzlisten','Sonstiges'];
+function amountNumber(v){let s=String(v||'').replace(/€/g,'').replace(/EUR|EURO/ig,'').replace(/\s/g,''); if(s.includes('.')&&s.includes(','))s=s.replace(/\./g,'').replace(',','.'); else s=s.replace(',','.'); const n=parseFloat(s.replace(/[^0-9.-]/g,'')); return isFinite(n)?n:0;}
+function euro(v){return amountNumber(v).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function cleanFile(s){return String(s||'').replace(/[\\/:*?"<>|]/g,'_').replace(/\s+/g,'_');}
+function validDate(de){const m=/^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(de||'')); if(!m)return false; const d=+m[1],mo=+m[2],y=+m[3],dt=new Date(y,mo-1,d); return y===YEAR&&dt.getFullYear()===y&&dt.getMonth()===mo-1&&dt.getDate()===d;}
+function dateMonth(de){const m=/^\d{2}\.(\d{2})\.\d{4}$/.exec(String(de||'')); return m?Math.max(0,Math.min(11,+m[1]-1)):openFolder;}
+function monthKeyFromIndex(mi){return pad(mi+1);}
+function dateSort(de){const m=/^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(de||'')); return m?(+m[3]*10000+ +m[2]*100 + +m[1]):0;}
+function defaultDate(){const s=(typeof window.ensureState==='function')?window.ensureState():null; let mk=s&&s.ui&&s.ui.selected&&s.ui.selected!=='year'?s.ui.selected:pad((new Date().getMonth()+1)); const d=Math.min(new Date().getDate(), new Date(YEAR, Number(mk),0).getDate()); return pad(d)+'.'+mk+'.'+YEAR;}
+function getRec(){try{return (JSON.parse(localStorage.getItem(LS_REC)||'[]')||[]).filter(r=>r&&r.date&&r.amount&&(r.image||r.imageKey)).sort((a,b)=>dateSort(a.date)-dateSort(b.date));}catch(e){return[]}}
+function setRec(a){localStorage.setItem(LS_REC,JSON.stringify((a||[]).filter(r=>r&&r.date&&r.amount&&(r.image||r.imageKey)).map(r=>{const x={...r}; if(x.rawText && x.rawText.length>500) x.rawText=x.rawText.slice(0,500); return x;})));}
+function status(t,c){const el=$('oksTankFinalStatus'); if(el){el.textContent=t; el.className='oksStatus '+(c||'');}}
+function idbOpen(){return new Promise((resolve,reject)=>{try{const req=indexedDB.open(DB_NAME,1); req.onupgradeneeded=()=>{req.result.createObjectStore(DB_STORE)}; req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error);}catch(e){reject(e);}})}
+async function idbPut(key,val){const db=await idbOpen(); return new Promise((resolve,reject)=>{const tx=db.transaction(DB_STORE,'readwrite'); tx.objectStore(DB_STORE).put(val,key); tx.oncomplete=()=>{db.close();resolve();}; tx.onerror=()=>{db.close();reject(tx.error);};});}
+async function idbGet(key){const db=await idbOpen(); return new Promise((resolve,reject)=>{const tx=db.transaction(DB_STORE,'readonly'); const rq=tx.objectStore(DB_STORE).get(key); rq.onsuccess=()=>resolve(rq.result||''); rq.onerror=()=>reject(rq.error); tx.oncomplete=()=>db.close();});}
+async function idbDel(key){try{const db=await idbOpen(); return new Promise(resolve=>{const tx=db.transaction(DB_STORE,'readwrite'); tx.objectStore(DB_STORE).delete(key); tx.oncomplete=()=>{db.close();resolve();}; tx.onerror=()=>{db.close();resolve();};});}catch(e){}}
+async function imageOf(r){return r.image || (r.imageKey? await idbGet(r.imageKey): '');}
+function normalizeDate(d,m,y){let ds=String(d).replace(/[Oo]/g,'0').replace(/[Il|]/g,'1').replace(/S/g,'5'), ms=String(m).replace(/[Oo]/g,'0').replace(/[Il|]/g,'1').replace(/S/g,'5'), ys=String(y).replace(/[Oo]/g,'0').replace(/[Il|]/g,'1').replace(/S/g,'5'); let di=parseInt(ds,10), mi=parseInt(ms,10); if(ys.length===2)ys='20'+ys; const yi=parseInt(ys,10); if(!isFinite(di)||!isFinite(mi)||!isFinite(yi))return ''; if(di<1||di>31||mi<1||mi>12||yi!==YEAR)return ''; const dt=new Date(yi,mi-1,di); if(dt.getFullYear()!==yi||dt.getMonth()!==mi-1||dt.getDate()!==di)return ''; return pad(di)+'.'+pad(mi)+'.'+yi;}
+function parseOCR(txt){
+  txt=String(txt||'').replace(/\r/g,'\n');
+  const lines=txt.split(/\n+/).map(x=>x.trim()).filter(Boolean);
+  let dates=[];
+  lines.forEach((line,idx)=>{
+    let s=line.replace(/,/g,'.');
+    let re=/(\d{1,2})\s*[\.\-\/]\s*(\d{1,2})\s*[\.\-\/]\s*(20\d{2}|\d{2})/g,m;
+    while((m=re.exec(s))){const de=normalizeDate(m[1],m[2],m[3]); if(de){let score=1000+idx; if(/datum|date|bon|rechnung|anmeldezeit|transaktion/i.test(line))score+=450; if(idx>lines.length*.45)score+=150; dates.push({de,score,line});}}
+    let re2=/(20\d{2})\s*[\.\-\/]\s*(\d{1,2})\s*[\.\-\/]\s*(\d{1,2})/g;
+    while((m=re2.exec(s))){const de=normalizeDate(m[3],m[2],m[1]); if(de)dates.push({de,score:900+idx,line});}
+  });
+  dates.sort((a,b)=>b.score-a.score);
+
+  // Wichtig: Bei Tankbelegen darf NICHT der gegebene Bar-Betrag (z.B. 100,00)
+  // oder Rückgabe genommen werden. Bevorzugt wird Summe/Z-Summe/Total/Gesamtbetrag.
+  const candidates=[];
+  const money=/(?:€\s*)?([0-9]{1,4}(?:[\.,][0-9]{2}))(?:\s*(?:€|EUR|EURO))?/gi;
+  const strong=/\b(?:z\s*[-–]?\s*summe|z\s*[-–]?\s*surnme|summe|surnme|sumrne|sunme|surnrne|gesamtsumme|gesamtbetrag|gesamt|total|endbetrag|endsumme|zu\s*zahlen|rechnungsbetrag)\b/i;
+  const cashBad=/bar\s*indoor|bar\b|rückgabe|rueckgabe|rückgeld|wechselgeld|gegeben|gezahlt|bezahlt|zahlung|karte|ec\b|visa|master|cash/i;
+  const taxBad=/mwst|ust|steuer|netto|ust\.|mws|tax/i;
+  const productBad=/liter|preis\s*\/\s*l|eur\s*\/\s*liter|menge|diesel|benzin/i;
+  const infoBad=/datum|zeit|beleg|bon\s*nr|pos\b|terminal|transaktion|kartennr|signatur/i;
+
+  function addCandidate(n,score,line,idx){
+    if(!(n>=1 && n<=900)) return;
+    candidates.push({n,score,line,idx});
+  }
+
+  lines.forEach((line,idx)=>{
+    const prev=lines[idx-1]||'', next=lines[idx+1]||'';
+    const context=(prev+' '+line+' '+next).toLowerCase();
+    let m;
+    while((m=money.exec(line))){
+      const n=amountNumber(m[1]);
+      let score=0;
+      if(strong.test(line)) score+=9000;
+      if(!strong.test(line) && strong.test(prev)) score+=6500;
+      if(!strong.test(line) && strong.test(next)) score+=3000;
+      if(/eur|€|euro/i.test(line)) score+=250;
+      if(idx>lines.length*.15) score+=80;
+      if(n>5 && n<250) score+=Math.min(n,250);
+      if(cashBad.test(line)) score-=12000;
+      if(taxBad.test(line)) score-=9000;
+      if(productBad.test(line)) score-=9000;
+      if(infoBad.test(line)) score-=2500;
+      // Wenn die Nachbarzeilen klar Rückgabe/Bar sind, aber die aktuelle Zeile Summe enthält,
+      // bleibt sie gültig. Sonst wird sie stark abgewertet.
+      if(!strong.test(line) && /rückgabe|rueckgabe|bar\s*indoor|gegeben|gezahlt/i.test(context)) score-=4000;
+      addCandidate(n,score,line,idx);
+    }
+  });
+
+  // Spezialfall: OCR schreibt oft "Surnme", "Sunme" oder trennt Summe und Betrag.
+  // In diesem Fall nimm den ersten plausiblen Betrag direkt bei dieser Zeile, aber nicht
+  // Bar/Bezahlt/Rückgabe/Netto/MwSt.
+  const sumCandidates=candidates.filter(c=>c.score>2500 && !cashBad.test(c.line) && !taxBad.test(c.line) && !productBad.test(c.line));
+  sumCandidates.sort((a,b)=>b.score-a.score || a.idx-b.idx);
+  candidates.sort((a,b)=>b.score-a.score || a.idx-b.idx || a.n-b.n);
+  const best=sumCandidates[0] || candidates.find(c=>c.score>0) || candidates[0];
+  return {date:(dates[0]&&dates[0].de)||'', amount:(best&&best.n)||0, amountScore:(best&&best.score)||-999999, raw:txt};
+}
+async function resizeDataURL(src,max=1400,q=.72){return new Promise(res=>{const im=new Image(); im.onload=()=>{let w=im.width,h=im.height; if(w>max||h>max){const r=Math.min(max/w,max/h); w=Math.round(w*r); h=Math.round(h*r);} const c=document.createElement('canvas'); c.width=w;c.height=h; const x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,w,h); x.drawImage(im,0,0,w,h); res(c.toDataURL('image/jpeg',q));}; im.onerror=()=>res(src); im.src=src;});}
+function preprocess(src){return new Promise(res=>{const im=new Image(); im.onload=()=>{const out=[src]; try{const maxW=1800, scale=Math.min(2,maxW/im.width); const w=Math.round(im.width*scale),h=Math.round(im.height*scale); const c=document.createElement('canvas'); c.width=w;c.height=h; const ctx=c.getContext('2d'); ctx.drawImage(im,0,0,w,h); let img=ctx.getImageData(0,0,w,h), d=img.data; for(let i=0;i<d.length;i+=4){let g=.299*d[i]+.587*d[i+1]+.114*d[i+2]; g=g>155?255:0; d[i]=d[i+1]=d[i+2]=g;} ctx.putImageData(img,0,0); out.push(c.toDataURL('image/png'));}catch(e){} res(out);}; im.onerror=()=>res([src]); im.src=src;});}
+async function runOCR(){if(ocrBusy)return; if(!currentImage){status('Bitte zuerst ein Foto machen oder Bild auswählen.','bad');return;} if(!window.Tesseract){status('OCR-Bibliothek lädt nicht. Bitte über Netlify/https mit Internet öffnen.','bad');return;} ocrBusy=true; status('OCR liest Datum und Betrag…','warn'); try{let best={date:'',amount:0,amountScore:-999999,raw:''}; const variants=await preprocess(currentImage); for(const img of variants){const r=await Tesseract.recognize(img,'deu+eng'); const p=parseOCR((r&&r.data&&r.data.text)||''); if(p.date&&!best.date) best.date=p.date; if(p.amount && (p.amountScore>best.amountScore || !best.amount)){best.amount=p.amount; best.amountScore=p.amountScore||0;} if(p.raw) best.raw=p.raw; if(best.date&&best.amount&&best.amountScore>2500) break;} currentRaw=best.raw||''; const rawEl=$('oksTankFinalRaw'); if(rawEl)rawEl.textContent=currentRaw; if(best.date && (!$('oksTankDate').dataset.user || !validDate($('oksTankDate').value))) $('oksTankDate').value=best.date; if(best.amount) $('oksTankAmount').value=euro(best.amount); status('OCR fertig. Bitte Datum/Betrag prüfen und speichern.','good');}catch(e){status('OCR konnte nicht lesen. Du kannst Datum/Betrag manuell eintragen und speichern.','bad');} finally{ocrBusy=false;}}
+function openPicker(id){if(pickerOpen)return; const input=$(id); if(!input)return; pickerOpen=true; input.value=''; setTimeout(()=>{try{input.click();}finally{setTimeout(()=>pickerOpen=false,1200);}},30);}
+function handleFile(file,input){pickerOpen=false; if(input)input.value=''; if(!file)return; const fr=new FileReader(); fr.onload=async()=>{currentImage=await resizeDataURL(String(fr.result||''),1400,.72); const img=$('oksTankFinalPreview'); if(img){img.src=currentImage; img.style.display='block';} status('Foto geladen. OCR startet…','warn'); setTimeout(runOCR,250);}; fr.readAsDataURL(file);}
+function bookTankToOriginalState(date, amount){
+  const mi=dateMonth(date), mk=monthKeyFromIndex(mi), val=amountNumber(amount); let s;
+  try{s=(typeof window.ensureState==='function')?window.ensureState():JSON.parse(localStorage.getItem('oks_state_2026')||'{}')||{};}catch(e){s={};}
+  if(!s.months) s.months={}; if(!s.ui) s.ui={selected:mk};
+  if(!s.months[mk]) s.months[mk]={daily:{},expenses:{},photos:{},meta:{warnings:[],unknownRateCount:0},paystats:{bar:0,ext:0,uber:0,bolt:0,eigen:0,rech:0,total:0},corrections:{import7:0,import19:0,manual:{}},driverstats:{items:{},total:0}};
+  if(!s.months[mk].expenses) s.months[mk].expenses={}; if(!s.months[mk].expenses[date]) s.months[mk].expenses[date]={tank:0,r1:0,r2:0,r3:0};
+  s.months[mk].expenses[date].tank=amountNumber(s.months[mk].expenses[date].tank)+val; s.ui.selected=mk;
+  try{ if(typeof window.saveState==='function') window.saveState(s); else localStorage.setItem('oks_state_2026',JSON.stringify(s)); }catch(e){ localStorage.setItem('oks_state_2026',JSON.stringify(s)); }
+  try{ if(typeof window.buildTabs==='function') window.buildTabs(); if(typeof window.render==='function') window.render(); else if(typeof window.renderMonth==='function') window.renderMonth(mk); }catch(e){}
+  setTimeout(()=>{try{const input=document.querySelector('input.pdfCellInput[data-kind="tank"][data-date="'+date+'"]'); if(input){input.value=euro(s.months[mk].expenses[date].tank); input.dispatchEvent(new Event('input',{bubbles:true})); input.dispatchEvent(new Event('change',{bubbles:true}));}}catch(e){}},100);
+}
+async function saveReceiptAndBook(){
+  const date=String($('oksTankDate').value||'').trim(); const amount=euro($('oksTankAmount').value);
+  if(!currentImage){status('Bitte zuerst ein Foto/Bild auswählen.','bad');return;} if(!validDate(date)){status('Datum ungültig. Bitte TT.MM.2026 eintragen.','bad');return;} if(amountNumber(amount)<=0){status('Betrag fehlt oder ist ungültig.','bad');return;}
+  const mi=dateMonth(date); openFolder=mi; const id=Date.now()+'_'+Math.random().toString(36).slice(2); status('Speichert Beleg und bucht Tank-Spalte…','warn');
+  let storedImage=currentImage; try{storedImage=await resizeDataURL(currentImage,900,.58);}catch(e){}
+  const item={id,date,amount,imageKey:id,month:mi,monthKey:monthKeyFromIndex(mi),createdAt:new Date().toISOString()};
+  try{ await idbPut(id, storedImage); }catch(e){ item.image=storedImage; }
+  try{ const rec=getRec(); rec.push(item); setRec(rec); }catch(e){ if(!item.image){ item.image=storedImage; delete item.imageKey; try{const rec=getRec(); rec.push(item); setRec(rec);}catch(e2){ status('Browser-Speicher voll. Bitte über Netlify öffnen oder alte Tankbelege exportieren/löschen.','bad'); return; } } else { status('Browser-Speicher voll. Bitte über Netlify öffnen oder alte Tankbelege exportieren/löschen.','bad'); return; } }
+  bookTankToOriginalState(date, amount);
+  setTimeout(()=>{try{openFolder=mi;renderFolders();}catch(e){}},100);
+  status('Gespeichert: '+date+' im '+MONTH_NAMES[mi]+'-Ordner und '+amount+' € in der Tank-Spalte.','good');
+}
+function receiptsFor(mi){return getRec().filter(r=>(typeof r.month==='number'?r.month:dateMonth(r.date))===mi).sort((a,b)=>dateSort(a.date)-dateSort(b.date));}
+
+function getDocs(){try{return (JSON.parse(localStorage.getItem(LS_DOC)||'[]')||[]).filter(d=>d&&d.id&&typeof d.month==='number'&&d.category&&d.name&&d.key).sort((a,b)=>(a.sort||0)-(b.sort||0)||String(a.name).localeCompare(String(b.name)));}catch(e){return[]}}
+function setDocs(a){localStorage.setItem(LS_DOC,JSON.stringify((a||[]).filter(d=>d&&d.id&&typeof d.month==='number'&&d.category&&d.name&&d.key)));}
+function docsFor(mi,cat){return getDocs().filter(d=>d.month===mi && (!cat || d.category===cat));}
+function archiveCount(mi,cat){return cat==='Tankbelege'?(receiptsFor(mi).length+docsFor(mi,'Tankbelege').length):docsFor(mi,cat).length;}
+function archiveTotal(mi){return ARCHIVE_CATS.reduce((n,c)=>n+archiveCount(mi,c),0);}
+function catLabel(c){return ({Kontoauszuege:'Kontoauszüge',CSV_Umsatzlisten:'CSV / Umsatzlisten'})[c]||c;}
+function guessArchiveCategory(fileName){const s=String(fileName||'').toLowerCase(); if(/konto|bank|auszug|sparkasse|volksbank|commerz|postbank|n26|paypal/.test(s))return 'Kontoauszuege'; if(/einzelfahrt|fahrtnachweis|umsatzliste|uportal/.test(s))return 'Einzelfahrtnachweise'; if(/csv|umsatz|export/.test(s))return 'CSV_Umsatzlisten'; if(/rechnung|invoice|quittung|beleg|bon/.test(s))return 'Rechnungen'; if(/kassenbuch/.test(s))return 'Kassenbuch'; if(/tank|kraftstoff|diesel|benzin|shell|aral|esso|total|avia|hem|jet|star/.test(s))return 'Tankbelege'; return 'Sonstiges';}
+function blobToDataURL(blob){return new Promise((resolve,reject)=>{const fr=new FileReader(); fr.onload=()=>resolve(fr.result); fr.onerror=()=>reject(fr.error); fr.readAsDataURL(blob);});}
+function dataUrlParts(dataUrl){const m=String(dataUrl||'').match(/^data:([^;]+);base64,(.*)$/); return m?{mime:m[1],base64:m[2]}:null;}
+async function saveArchiveFile(file,mi,cat){const key='doc_'+Date.now()+'_'+Math.random().toString(36).slice(2); const dataUrl=await blobToDataURL(file); await idbPut(key,dataUrl); const rec={id:key,month:mi,category:cat||guessArchiveCategory(file.name),name:file.name,type:file.type||'application/octet-stream',size:file.size||0,key,created:new Date().toISOString(),sort:Date.now()}; const arr=getDocs(); arr.push(rec); setDocs(arr); return rec;}
+async function addArchiveFiles(ev){
+  const files=Array.from(ev.target.files||[]);
+  if(!files.length) return;
+  const sel=$('oksArchiveCategory')?$('oksArchiveCategory').value:'AUTO';
+  let saved=[];
+  status('Speichere '+files.length+' Datei(en) in die Monatsablage…','warn');
+  for(const f of files){
+    const cat=(sel && sel!=='AUTO') ? sel : guessArchiveCategory(f.name);
+    const rec=await saveArchiveFile(f,openFolder,cat);
+    saved.push(rec);
+  }
+  ev.target.value='';
+  openCategory=(sel && sel!=='AUTO') ? sel : (saved[0] ? saved[0].category : openCategory);
+  await renderFolders();
+  const counts={}; saved.forEach(r=>counts[r.category]=(counts[r.category]||0)+1);
+  const txt=Object.keys(counts).map(k=>catLabel(k)+': '+counts[k]).join(', ');
+  status(files.length+' Datei(en) in '+MONTH_NAMES[openFolder]+' gespeichert. '+txt,'good');
+}
+async function deleteArchiveDoc(id){const arr=getDocs(); const d=arr.find(x=>x.id===id); if(d && confirm('Datei aus dem Monatsordner löschen?')){await idbDel(d.key); setDocs(arr.filter(x=>x.id!==id)); await renderFolders();}}
+async function downloadArchiveDoc(id){
+  const d=getDocs().find(x=>x.id===id);
+  if(!d){status('Datei nicht gefunden.','bad');return;}
+  try{
+    const data=await idbGet(d.key);
+    if(!data){status('Datei konnte nicht aus dem Speicher gelesen werden.','bad');return;}
+    const blob=await (await fetch(data)).blob();
+    downloadBlob(blob,d.name);
+  }catch(e){status('Download konnte nicht gestartet werden.','bad');}
+}
+async function openArchiveDoc(id){
+  const d=getDocs().find(x=>x.id===id);
+  if(!d){status('Datei nicht gefunden.','bad');return;}
+  try{
+    const data=await idbGet(d.key);
+    if(!data){status('Datei konnte nicht aus dem Speicher gelesen werden.','bad');return;}
+    showArchivePreview(data,d);
+  }catch(e){status('Datei konnte nicht geöffnet werden. Bitte Download benutzen.','bad');}
+}
+function showArchivePreview(dataUrl,d){
+  let old=document.getElementById('oksDocPreviewOverlay');
+  if(old) old.remove();
+  const mime=(String(dataUrl).match(/^data:([^;]+);/)||[])[1] || d.type || '';
+  const box=document.createElement('div');
+  box.id='oksDocPreviewOverlay';
+  box.style.cssText='position:fixed;z-index:999999;inset:0;background:rgba(0,0,0,.86);padding:14px;display:flex;flex-direction:column;gap:10px;';
+  const head=document.createElement('div');
+  head.style.cssText='display:flex;gap:8px;align-items:center;justify-content:space-between;color:#fff;font-weight:900;';
+  const title=document.createElement('div');
+  title.textContent=d.name;
+  title.style.cssText='overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60vw;';
+  const actions=document.createElement('div');
+  const dl=document.createElement('button'); dl.textContent='Download'; dl.className='oksBtn secondary'; dl.onclick=()=>downloadArchiveDoc(d.id);
+  const close=document.createElement('button'); close.textContent='Schließen'; close.className='oksBtn'; close.onclick=()=>box.remove();
+  actions.appendChild(dl); actions.appendChild(close); actions.style.cssText='display:flex;gap:8px;';
+  head.appendChild(title); head.appendChild(actions);
+  const content=document.createElement('div');
+  content.style.cssText='flex:1;min-height:0;background:#111;border:1px solid #333;border-radius:14px;overflow:auto;display:flex;align-items:center;justify-content:center;';
+  if(mime.startsWith('image/')){
+    const img=document.createElement('img'); img.src=dataUrl; img.style.cssText='max-width:100%;max-height:100%;object-fit:contain;'; content.appendChild(img);
+  } else if(mime==='application/pdf' || String(d.name).toLowerCase().endsWith('.pdf')){
+    const iframe=document.createElement('iframe'); iframe.src=dataUrl; iframe.style.cssText='width:100%;height:100%;border:0;background:#fff;'; content.appendChild(iframe);
+    const note=document.createElement('div'); note.textContent='Wenn die PDF-Vorschau auf deinem Handy leer bleibt, bitte Download drücken.'; note.style.cssText='position:absolute;bottom:18px;left:24px;right:24px;color:#fff;background:rgba(0,0,0,.55);padding:8px;border-radius:10px;font-size:13px;';
+  } else if(mime.startsWith('text/') || /\.(csv|txt|log)$/i.test(d.name)){
+    fetch(dataUrl).then(r=>r.text()).then(t=>{const pre=document.createElement('pre'); pre.textContent=t; pre.style.cssText='width:100%;height:100%;margin:0;padding:14px;color:#fff;white-space:pre-wrap;overflow:auto;'; content.innerHTML=''; content.appendChild(pre);}).catch(()=>{});
+    content.innerHTML='<div style="color:#fff;padding:20px">Datei wird geladen…</div>';
+  } else {
+    const msg=document.createElement('div'); msg.style.cssText='color:#fff;text-align:center;padding:22px;font-weight:800;'; msg.innerHTML='Für diesen Dateityp gibt es keine Vorschau.<br>Bitte „Download“ drücken.'; content.appendChild(msg);
+  }
+  box.appendChild(head); box.appendChild(content); document.body.appendChild(box);
+}
+
+function fmtDE(n){return (Number(n)||0).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function getMonthData(mi){try{const s=(typeof window.ensureState==='function')?window.ensureState():null; const mk=pad(mi+1); return s&&s.months?s.months[mk]:null;}catch(e){return null;}}
+async function createKassenbuchPDF(mi,ret){if(!window.jspdf){alert('PDF-Bibliothek nicht geladen. Bitte online/Netlify öffnen.');return null;} const {jsPDF}=window.jspdf; const doc=new jsPDF({unit:'mm',format:'a4',orientation:'landscape'}); const m=getMonthData(mi); const mk=pad(mi+1); doc.setFontSize(14); doc.text('OKS Kassenbuch '+MONTH_NAMES[mi]+' '+YEAR,10,12); doc.setFontSize(8); let y=20; doc.text('Datum',10,y); doc.text('Gesamt',44,y); doc.text('7% Umsatz',72,y); doc.text('19% Umsatz',104,y); doc.text('7% MwSt',138,y); doc.text('19% MwSt',166,y); doc.text('Tank',196,y); doc.text('R1',220,y); doc.text('R2',238,y); doc.text('R3',256,y); doc.text('Vorsteuer',274,y); y+=5; let sums={total:0,u7:0,u19:0,v7:0,v19:0,tank:0,r1:0,r2:0,r3:0,vor:0}; if(m){const daily=m.daily||{}, expenses=m.expenses||{}; const keys=Array.from(new Set([...Object.keys(daily),...Object.keys(expenses)])).sort((a,b)=>dateSort(a)-dateSort(b)); keys.forEach(k=>{const d=daily[k]||{}, ex=expenses[k]||{}; const tank=ex.tank||0,r1=ex.r1||0,r2=ex.r2||0,r3=ex.r3||0,vor=(tank+r1+r2+r3)*19/119; sums.total+=d.totalGross||0; sums.u7+=d.gross7||0; sums.u19+=d.gross19||0; sums.v7+=d.vat7||0; sums.v19+=d.vat19||0; sums.tank+=tank; sums.r1+=r1; sums.r2+=r2; sums.r3+=r3; sums.vor+=vor; if(y>190){doc.addPage();y=15;} doc.text(k,10,y); doc.text(fmtDE(d.totalGross),44,y); doc.text(fmtDE(d.gross7),72,y); doc.text(fmtDE(d.gross19),104,y); doc.text(fmtDE(d.vat7),138,y); doc.text(fmtDE(d.vat19),166,y); doc.text(fmtDE(tank),196,y); doc.text(fmtDE(r1),220,y); doc.text(fmtDE(r2),238,y); doc.text(fmtDE(r3),256,y); doc.text(fmtDE(vor),274,y); y+=5;}); const corr=(m.corrections||{import7:0,import19:0}); const c7=corr.import7||0,c19=corr.import19||0; sums.total+=c7+c19; sums.u7+=c7; sums.u19+=c19; sums.v7+=taxFromGross7(c7); sums.v19+=taxFromGross19(c19); } y+=3; doc.setFontSize(9); doc.text('SUMME',10,y); doc.text(fmtDE(sums.total),44,y); doc.text(fmtDE(sums.u7),72,y); doc.text(fmtDE(sums.u19),104,y); doc.text(fmtDE(sums.v7),138,y); doc.text(fmtDE(sums.v19),166,y); doc.text(fmtDE(sums.tank),196,y); doc.text(fmtDE(sums.r1),220,y); doc.text(fmtDE(sums.r2),238,y); doc.text(fmtDE(sums.r3),256,y); doc.text(fmtDE(sums.vor),274,y); const name='Kassenbuch_'+cleanFile(MONTH_NAMES[mi]+'_'+YEAR)+'.pdf'; const blob=doc.output('blob'); if(ret)return {name,blob}; doc.save(name); return {name,blob};}
+async function saveKassenbuchPDFToArchive(){const pdf=await createKassenbuchPDF(openFolder,true); if(!pdf)return; const file=new File([pdf.blob],pdf.name,{type:'application/pdf'}); await saveArchiveFile(file,openFolder,'Kassenbuch'); openCategory='Kassenbuch'; await renderFolders(); status('Kassenbuch-PDF in '+MONTH_NAMES[openFolder]+' / Kassenbuch gespeichert.','good');}
+async function addDataUrlToZipFolder(folder,name,dataUrl){const p=dataUrlParts(dataUrl); if(p)folder.file(name,p.base64,{base64:true});}
+async function createMonthArchiveZip(mi){if(!window.JSZip){alert('ZIP-Bibliothek nicht geladen.');return;} const zip=new JSZip(); const root=zip.folder('OKS_'+MONTH_NAMES[mi]+'_'+YEAR); const kb=await createKassenbuchPDF(mi,true); if(kb) root.folder('Kassenbuch').file(kb.name,kb.blob); const tankPdf=receiptsFor(mi).length?await createTankPDF(mi,true):null; const tankFolder=root.folder('Tankbelege'); if(tankPdf)tankFolder.file(tankPdf.name,tankPdf.blob); const tanks=receiptsFor(mi); for(let i=0;i<tanks.length;i++){const r=tanks[i], img=await imageOf(r); await addDataUrlToZipFolder(tankFolder.folder('Einzelbilder'),pad(i+1)+'_'+cleanFile(r.date)+'_'+cleanFile(r.amount)+'.jpg',img);} const docs=getDocs().filter(d=>d.month===mi).sort((a,b)=>ARCHIVE_CATS.indexOf(a.category)-ARCHIVE_CATS.indexOf(b.category)||(a.sort||0)-(b.sort||0)); for(const d of docs){ const data=await idbGet(d.key); const target=(d.category==='Tankbelege')?tankFolder.folder('Hochgeladene_Dateien'):root.folder(catLabel(d.category).replace(/ü/g,'ue').replace(/ /g,'_')); await addDataUrlToZipFolder(target,cleanFile(d.name),data); } root.file('INFO.txt','OKS Steuerberater-Monatspaket '+MONTH_NAMES[mi]+' '+YEAR+'\nErstellt: '+new Date().toLocaleString('de-DE')+'\nTankbelege: '+tanks.length+'\nDokumente: '+docs.length+'\n'); const blob=await zip.generateAsync({type:'blob'}); downloadBlob(blob,'OKS_Steuerberater_'+cleanFile(MONTH_NAMES[mi]+'_'+YEAR)+'.zip');}
+
+async function renderFolders(){
+  const folders=$('oksTankFolders'), gal=$('oksTankGallery'), title=$('oksTankFolderTitle');
+  const cats=$('oksArchiveCats'), catTitle=$('oksArchiveCatTitle'), docList=$('oksArchiveDocList');
+  if(!folders||!gal)return;
+  folders.innerHTML=MONTH_NAMES.map((m,i)=>'<button type="button" class="oksFolderBtn '+(i===openFolder?'active':'')+'" data-mi="'+i+'">📁 '+m+'<small>'+archiveTotal(i)+' Datei(en) gesamt</small></button>').join('');
+  folders.querySelectorAll('[data-mi]').forEach(b=>b.onclick=()=>{openFolder=+b.dataset.mi; renderFolders();});
+  if(cats){
+    cats.innerHTML=ARCHIVE_CATS.map(c=>'<button type="button" class="oksCatBtn '+(c===openCategory?'active':'')+'" data-cat="'+c+'">📂 '+catLabel(c)+'<small>'+archiveCount(openFolder,c)+' Datei(en)</small></button>').join('');
+    cats.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{openCategory=b.dataset.cat; renderFolders();});
+  }
+  if(title)title.textContent='Geöffneter Monat: '+MONTH_NAMES[openFolder]+' '+YEAR;
+  if(catTitle)catTitle.textContent='Unterordner: '+catLabel(openCategory);
+  const sel=$('oksArchiveCategory'); if(sel) sel.value=openCategory;
+  if(openCategory==='Tankbelege'){
+    const arr=receiptsFor(openFolder);
+    if(!arr.length){gal.innerHTML='<div class="oksMini">Keine Tankbelege im '+MONTH_NAMES[openFolder]+'-Ordner.</div>';} else {
+      gal.innerHTML=arr.map((r,i)=>'<div class="oksCard"><img id="oksImg_'+r.id+'" src="'+(r.image||'')+'" alt="Tankbeleg"><div class="oksCardMeta"><b>'+(i+1)+'. '+r.date+'</b><br>'+r.amount+' €</div><div class="oksCardBtns"><button data-book="'+r.id+'">nochmal buchen</button><button class="danger" data-del="'+r.id+'">löschen</button></div></div>').join('');
+      for(const r of arr){ if(!r.image&&r.imageKey){ const img=$('oksImg_'+r.id); imageOf(r).then(src=>{if(img&&src)img.src=src;}); }}
+      gal.querySelectorAll('[data-book]').forEach(b=>b.onclick=()=>{const r=getRec().find(x=>String(x.id)===String(b.dataset.book)); if(r){bookTankToOriginalState(r.date,r.amount); status('Nochmals in Tank-Spalte gebucht: '+r.date+' / '+r.amount+' €','good');}});
+      gal.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{if(confirm('Diesen Tankbeleg aus dem Ordner löschen? Die bereits gebuchte Tank-Spalte bleibt unverändert.')){const r=getRec().find(x=>String(x.id)===String(b.dataset.del)); if(r&&r.imageKey) await idbDel(r.imageKey); setRec(getRec().filter(x=>String(x.id)!==String(b.dataset.del))); renderFolders();}});
+    }
+  } else {
+    gal.innerHTML='';
+  }
+  if(docList){
+    const docs=docsFor(openFolder,openCategory);
+    if(openCategory==='Tankbelege' && !docs.length) docList.innerHTML='<div class="oksMini">Tankbelege werden oben als Bilder angezeigt. PDF/ZIP erstellt 4 Tankbelege pro DIN-A4-Seite. Hochgeladene Tank-Dateien erscheinen hier zusätzlich.</div>';
+    else if(!docs.length) docList.innerHTML='<div class="oksMini">Dieser Unterordner ist leer.</div>';
+    else docList.innerHTML=docs.map(d=>'<div class="oksCard"><div class="oksCardMeta"><b>'+catLabel(d.category)+'</b><br>'+d.name+'<br>'+Math.round((d.size||0)/1024)+' KB</div><div class="oksCardBtns"><button data-open="'+d.id+'">öffnen</button><button data-down="'+d.id+'">download</button><button class="danger" data-docdel="'+d.id+'">löschen</button></div></div>').join('');
+    docList.querySelectorAll('[data-open]').forEach(b=>b.onclick=async()=>openArchiveDoc(b.dataset.open));
+    docList.querySelectorAll('[data-down]').forEach(b=>b.onclick=async()=>downloadArchiveDoc(b.dataset.down));
+    docList.querySelectorAll('[data-docdel]').forEach(b=>b.onclick=()=>deleteArchiveDoc(b.dataset.docdel));
+  }
+}
+async function createTankPDF(mi,ret){if(!window.jspdf){alert('PDF-Bibliothek nicht geladen. Bitte online/Netlify öffnen.');return null;} const arr=receiptsFor(mi); if(!arr.length){alert('Keine Tankbelege im '+MONTH_NAMES[mi]+'-Ordner.');return null;} const {jsPDF}=window.jspdf, doc=new jsPDF({unit:'mm',format:'a4'}), slots=[[10,18],[110,18],[10,151],[110,151]]; for(let i=0;i<arr.length;i++){const r=arr[i]; if(i>0&&i%4===0)doc.addPage(); const s=slots[i%4],x=s[0],y=s[1], img=await imageOf(r); doc.setFontSize(10); doc.text('Tankbeleg '+(i+1)+' - '+r.date+' - '+r.amount+' EUR',x,y-4); doc.rect(x,y,90,125); try{if(img)doc.addImage(img,'JPEG',x+2,y+2,86,112,undefined,'FAST');}catch(e){try{if(img)doc.addImage(img,'PNG',x+2,y+2,86,112);}catch(_){}} doc.setFontSize(8); doc.text('Datum: '+r.date+'   Betrag: '+r.amount+' EUR',x+2,y+120);} const name='Tankbelege_'+cleanFile(MONTH_NAMES[mi]+'_'+YEAR)+'.pdf'; if(ret)return {name,blob:doc.output('blob')}; doc.save(name); return null;}
+async function tankZip(mi){if(!window.JSZip){alert('ZIP-Bibliothek nicht geladen.');return;} const arr=receiptsFor(mi); if(!arr.length){alert('Keine Tankbelege im '+MONTH_NAMES[mi]+'-Ordner.');return;} const zip=new JSZip(), f=zip.folder('Tankbelege_'+MONTH_NAMES[mi]+'_'+YEAR); for(let i=0;i<arr.length;i++){const r=arr[i], img=await imageOf(r); const m=String(img).match(/^data:(image\/[^;]+);base64,(.*)$/); if(m)f.file(pad(i+1)+'_'+cleanFile(r.date)+'_'+cleanFile(r.amount)+'.jpg',m[2],{base64:true});} const pdf=await createTankPDF(mi,true); if(pdf)f.file(pdf.name,pdf.blob); f.file('INFO.txt','Tankbelege '+MONTH_NAMES[mi]+' '+YEAR+'\nSortierung: Datum aufsteigend\nPDF: 4 Belege pro DIN-A4-Seite\nAnzahl: '+arr.length); const blob=await zip.generateAsync({type:'blob'}); downloadBlob(blob,'Tankbelege_'+cleanFile(MONTH_NAMES[mi]+'_'+YEAR)+'.zip');}
+function downloadBlob(blob,name){const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);}
+
+function buildTankCard(){let card=$('oksTankReceiptCard'); const zipCard=$('steuerZipCard'); if(!card){card=document.createElement('div'); card.className='card noPrint'; card.id='oksTankReceiptCard'; if(zipCard&&zipCard.parentNode)zipCard.parentNode.insertBefore(card,zipCard); else document.querySelector('.rightcol')?.appendChild(card);} card.innerHTML='<div class="oksTankBox"><div class="oksTankTitle">Tankbeleg fotografieren / speichern</div><div class="oksMini">Foto machen, OCR lesen lassen, Datum/Betrag prüfen oder korrigieren und dann speichern. Erst beim Speichern wird der Betrag in die Tank-Spalte eingetragen und das Bild in den Monatsordner → Tankbelege gelegt.</div><div class="oksActions"><button class="oksBtn" id="oksTankCam" type="button">📷 Tankbeleg fotografieren</button><button class="oksBtn secondary" id="oksTankGal" type="button">Bild auswählen</button><button class="oksBtn secondary" id="oksTankOcrAgain" type="button">OCR erneut lesen</button><button class="oksBtn secondary" id="oksTankRawToggle" type="button">OCR-Text</button><input id="oksTankCamInput" type="file" accept="image/*" capture="environment" style="position:fixed;left:-9999px;top:-9999px;opacity:0"><input id="oksTankGalInput" type="file" accept="image/*" style="position:fixed;left:-9999px;top:-9999px;opacity:0"></div><div class="oksPreviewGrid"><img id="oksTankFinalPreview" alt="Tankbeleg Vorschau"><div><div class="oksFields"><div class="oksField"><label>Datum</label><input id="oksTankDate" inputmode="numeric" placeholder="TT.MM.JJJJ"></div><div class="oksField"><label>Betrag (€)</label><input id="oksTankAmount" inputmode="decimal" placeholder="0,00"></div></div><div class="oksActions"><button class="oksBtn" id="oksTankSaveFinal" type="button">Speichern + Ordner + Tank-Spalte</button></div><div class="oksStatus" id="oksTankFinalStatus">Bereit.</div><pre id="oksTankFinalRaw"></pre></div></div></div><div class="oksTankBox"><div class="oksTankTitle">📁 Monatsablage / Steuerberater-Ordner</div><div class="oksMini">Januar bis Dezember. Im Monat liegen Unterordner: Tankbelege, Kassenbuch, Rechnungen, Einzelfahrtnachweise, Kontoauszüge, CSV/Umsatzlisten und Sonstiges.</div><div class="oksMonthFolders" id="oksTankFolders"></div><div class="oksTankTitle" id="oksTankFolderTitle">Geöffneter Monat</div><div class="oksCatFolders" id="oksArchiveCats"></div><div class="oksActions"><select id="oksArchiveCategory" class="oksBtn secondary"><option value="AUTO">Automatisch sortieren</option><option value="Tankbelege">Tankbelege</option><option value="Kassenbuch">Kassenbuch</option><option value="Rechnungen">Rechnungen</option><option value="Einzelfahrtnachweise">Einzelfahrtnachweise</option><option value="Kontoauszuege">Kontoauszüge</option><option value="CSV_Umsatzlisten">CSV / Umsatzlisten</option><option value="Sonstiges">Sonstiges</option></select><input id="oksArchiveFileInput" type="file" multiple style="display:none"><button class="oksBtn secondary" id="oksArchiveUpload" type="button">Dateien in Unterordner hochladen</button></div><div class="oksActions"><button class="oksBtn secondary" id="oksTankPdfFinal" type="button">Tankbeleg-PDF</button><button class="oksBtn secondary" id="oksSaveKassenbuchPdf" type="button">Kassenbuch-PDF im Monat speichern</button><button class="oksBtn" id="oksMonthZipFinal" type="button">ZIP für geöffneten Monat erstellen</button></div><div class="oksTankTitle" id="oksArchiveCatTitle">Unterordner</div><div class="oksGallery" id="oksTankGallery"></div><div class="oksDocList" id="oksArchiveDocList"></div></div>'; $('oksTankDate').value=defaultDate(); $('oksTankDate').addEventListener('input',()=>{$('oksTankDate').dataset.user='1'}); $('oksTankAmount').addEventListener('input',()=>{$('oksTankAmount').dataset.user='1'}); $('oksTankCam').onclick=e=>{e.preventDefault();e.stopPropagation();openPicker('oksTankCamInput')}; $('oksTankGal').onclick=e=>{e.preventDefault();e.stopPropagation();openPicker('oksTankGalInput')}; $('oksTankCamInput').onchange=e=>handleFile(e.target.files&&e.target.files[0],e.target); $('oksTankGalInput').onchange=e=>handleFile(e.target.files&&e.target.files[0],e.target); $('oksTankOcrAgain').onclick=runOCR; $('oksTankRawToggle').onclick=()=>{const p=$('oksTankFinalRaw'); if(p)p.style.display=p.style.display==='block'?'none':'block'}; $('oksTankSaveFinal').onclick=saveReceiptAndBook; $('oksTankPdfFinal').onclick=()=>createTankPDF(openFolder,false); $('oksMonthZipFinal').onclick=()=>createMonthArchiveZip(openFolder); $('oksSaveKassenbuchPdf').onclick=saveKassenbuchPDFToArchive; $('oksArchiveUpload').onclick=()=>$('oksArchiveFileInput').click(); $('oksArchiveFileInput').onchange=addArchiveFiles; $('oksArchiveCategory').onchange=e=>{openCategory=e.target.value; renderFolders();}; renderFolders();}
+
+function classifyName(name){const s=String(name||'').toLowerCase(); if(/konto|bank|auszug|sparkasse|volksbank|commerz|postbank|n26|paypal/.test(s))return 'Kontoauszuege'; if(/einzelfahrt|fahrtnachweis|umsatzliste|uportal/.test(s))return 'Einzelfahrtnachweise'; if(/csv|umsatz|export/.test(s))return 'CSV_Umsatzlisten'; if(/rechnung|invoice|quittung|beleg|bon/.test(s))return 'Rechnungen'; if(/kassenbuch/.test(s))return 'Kassenbuch'; if(/tank|kraftstoff|diesel|benzin|shell|aral|esso|total|avia|hem|jet|star/.test(s))return 'Tankbelege'; return 'Sonstiges';}
+function patchSteuerExport(){const inp=$('steuerZipFiles'); if(inp){inp.accept='.pdf,application/pdf,image/*,.jpg,.jpeg,.png,.csv,.txt,.xlsx,.xls'; inp.multiple=true;} const mini=document.querySelector('#steuerZipCard .mini'); if(mini)mini.innerHTML='Zusatzdateien auswählen oder direkt oben im Monatsordner speichern. Der ZIP-Export nimmt den geöffneten Monat mit Kassenbuch-PDF, Tankbeleg-PDF und allen Dokumenten.'; window.oksCreateSteuerZip=async function(){ await createMonthArchiveZip(openFolder); }; const btn=document.getElementById('createSteuerZip'); if(btn)btn.onclick=window.oksCreateSteuerZip;}
+function boot(){buildTankCard();patchSteuerExport();}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot); else setTimeout(boot,0);
+})();
+</script>
+
+
+<div class="oksLicenseFooter noPrint" id="oksLicenseFooter">
+  © 2026 OKS Kassenbuch · Lizenzträger: <b>Hasan Ordu</b> · Alle Rechte vorbehalten.
+</div>
+
+</body>
+</html>
