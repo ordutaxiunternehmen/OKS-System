@@ -1003,6 +1003,7 @@
   <button type="button" class="oksNavBtn" data-view="arbeitszeit">Arbeitszeit<small>Schichten &amp; Zuschläge</small></button>
   <button type="button" class="oksNavBtn" data-view="fahrtenbuch">Fahrtenbuch<small>Arbeits- &amp; Privat-km</small></button>
   <div class="oksNavSpacer"></div>
+  <button type="button" id="pfFab" class="pfNavBtn" aria-expanded="false" aria-controls="pfPanel">Portal-Abruf<small>FMS-Unternehmerportal</small></button>
   <button type="button" class="oksNavBtn" data-view="ordner"><span><span class="oksIco"></span>Monatsordner</span><small id="oksNavOrdnerInfo">für den Steuerberater</small></button>
   <button type="button" class="oksNavBtn" data-view="hilfe"><span><span class="oksIco oksIco--help"></span>Hilfe</span><small>alles erklärt</small></button>
 </nav>
@@ -5441,8 +5442,12 @@ function oksOpenLexwareSKR04(){
 
 <!-- ===== Portal-Abruf (Zusatzmodul, rein additiv; verändert keinen bestehenden Code) ===== -->
 <style id="pf-style">
-#pfFab{position:fixed;right:16px;bottom:16px;z-index:9000;background:var(--accent,#ffd400);color:#000;border:0;border-radius:999px;padding:12px 16px;font-weight:900;font-size:13px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.5)}
-#pfPanel{position:fixed;right:16px;bottom:64px;z-index:9001;width:min(460px,calc(100vw - 32px));max-height:calc(100vh - 90px);overflow:auto;background:#0b0b0b;color:#fff;border:1px solid var(--accent,#ffd400);border-radius:14px;padding:14px;font-family:Arial,Helvetica,sans-serif;font-size:13px;display:none;box-shadow:0 8px 30px rgba(0,0,0,.7)}
+.pfNavBtn{display:flex;flex-direction:column;justify-content:center;background:var(--accent,#ffd400);color:#000;border:1px solid var(--accent,#ffd400);border-radius:var(--r-pill,999px);padding:6px 14px;min-height:var(--h-ctl,38px);font-weight:900;font-size:var(--fs-body,13px);cursor:pointer;white-space:nowrap}
+.pfNavBtn small{font-weight:700;font-size:10px;color:#3a3000;margin-top:2px}
+.pfNavBtn:hover{filter:brightness(1.08)}
+.pfNavBtn[aria-expanded="true"]{box-shadow:0 0 0 2px #000,0 0 0 4px var(--accent,#ffd400)}
+@media(max-width:560px){.pfNavBtn{padding:6px 10px;font-size:var(--fs-small,12px);flex:1 1 auto;align-items:center}}
+#pfPanel{position:fixed;right:16px;top:70px;z-index:9001;width:min(460px,calc(100vw - 32px));max-height:calc(100vh - 90px);overflow:auto;background:#0b0b0b;color:#fff;border:1px solid var(--accent,#ffd400);border-radius:14px;padding:14px;font-family:Arial,Helvetica,sans-serif;font-size:13px;display:none;box-shadow:0 8px 30px rgba(0,0,0,.7)}
 #pfPanel.open{display:block}
 #pfPanel h3{margin:0 0 8px;color:var(--accent,#ffd400);font-size:14px}
 #pfPanel h4{margin:14px 0 6px;color:var(--accent,#ffd400);font-size:12.5px}
@@ -5458,9 +5463,8 @@ function oksOpenLexwareSKR04(){
 #pfPanel .pfBad{color:#ffb4a2;font-weight:700}
 #pfPanel .pfBox{border:1px solid #242424;border-radius:10px;padding:8px;background:#070707;margin-top:6px}
 #pfPanel ol{margin:6px 0 0 18px;padding:0;line-height:1.5}
-@media print{#pfFab,#pfPanel{display:none !important}}
+@media print{.pfNavBtn,#pfPanel{display:none !important}}
 </style>
-<button type="button" id="pfFab" class="noPrint">Portal-Abruf</button>
 <div id="pfPanel" class="noPrint" role="dialog" aria-label="Portal-Abruf">
   <h3>Portal-Abruf &amp; Auswertung</h3>
 
@@ -5525,8 +5529,24 @@ function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&am
 function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
 
 // ---- Panel auf/zu
-$('pfFab').addEventListener('click',function(){$('pfPanel').classList.toggle('open');});
-$('pfClose').addEventListener('click',function(){$('pfPanel').classList.remove('open');});
+function placePanel(){
+  var nav=$('oksNav'),pn=$('pfPanel');
+  var top=nav?Math.max(8,Math.round(nav.getBoundingClientRect().bottom)+8):70;
+  pn.style.top=top+'px';pn.style.maxHeight='calc(100vh - '+(top+16)+'px)';
+}
+function setOpen(on){
+  if(on)placePanel();
+  $('pfPanel').classList.toggle('open',on);
+  $('pfFab').setAttribute('aria-expanded',on?'true':'false');
+}
+$('pfFab').addEventListener('click',function(){setOpen(!$('pfPanel').classList.contains('open'));});
+$('pfClose').addEventListener('click',function(){setOpen(false);});
+window.addEventListener('resize',function(){if($('pfPanel').classList.contains('open'))placePanel();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&$('pfPanel').classList.contains('open'))setOpen(false);});
+document.addEventListener('mousedown',function(e){
+  var pn=$('pfPanel');
+  if(pn.classList.contains('open')&&!pn.contains(e.target)&&!$('pfFab').contains(e.target))setOpen(false);
+});
 
 // ---- Zugang einmalig
 function loadCred(){try{var j=JSON.parse(ls('get',KEY)||'null');return (j&&j.u&&j.p)?j:null;}catch(e){return null;}}
@@ -5641,7 +5661,7 @@ $('pfRun').addEventListener('click',async function(){
 
 // ---- Abschlussfrage
 $('pfCorr').addEventListener('click',function(){
-  $('pfPanel').classList.remove('open');
+  setOpen(false);
   $('pfSaveInfo').textContent='';
 });
 $('pfSaveAll').addEventListener('click',async function(){
