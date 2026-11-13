@@ -1,6 +1,6 @@
 {
-  "name": "OKS Kassenbuch",
-  "short_name": "OKS",
+  "name": "Cockpit Plus",
+  "short_name": "Cockpit Plus",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0b0b0b",
