@@ -9,6 +9,8 @@
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" href="/icon-192.png">
 <link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cockpit Plus">
 <style>
   :root{--bg:#000;--fg:#fff;--accent:#ffd400;--accent-dim:#c7a900;--muted:#9aa0a6;--surface:#0b0b0b;--line:#242424;--danger:#e5484d;--ok:#30a46c;--warn:#ffb224;--r:14px}
   *{box-sizing:border-box}
@@ -69,7 +71,7 @@
 <body>
 <div class="wrap" id="shell">
   <div class="brand"><img src="/icon-192.png" alt=""><b>COCKPIT PLUS</b></div>
-  <div class="demo" id="demoNote">DEMO-Modus – Beispieldaten, keine echten Zahlungen. Wird automatisch ausgeschaltet, sobald der Server eingetragen ist.</div>
+  <div class="demo hidden" id="demoNote">DEMO-Modus – Beispieldaten, keine echten Zahlungen. Wird automatisch ausgeschaltet, sobald der Server eingetragen ist.</div>
 
   <!-- Laden -->
   <section id="v-loading"><div class="spinner"></div><p class="muted" style="text-align:center" id="loadMsg">Einen Moment…</p></section>
@@ -232,7 +234,12 @@
    ===================================================================== */
 (function(){
 const CFG = window.CP_CONFIG || {};
-const DEMO = !CFG.SUPABASE_URL || /[?&]demo=1/.test(location.search);
+const DEMO = false;
+if (!CFG.SUPABASE_URL || !CFG.SUPABASE_ANON_KEY) {
+  document.body.innerHTML = '<div style="max-width:460px;margin:60px auto;padding:0 18px;font-family:Arial;color:#fff"><h1 style="color:#ffd400">Cockpit Plus</h1><p>Der Server ist noch nicht verbunden.</p><p style="color:#9aa0a6;font-size:14px">Bitte in <b>config.js</b> die Supabase-Adresse und den Schlüssel eintragen (siehe Anleitung README).</p></div>';
+  throw new Error('Cockpit Plus: config.js nicht ausgefüllt');
+}
+
 const $ = id => document.getElementById(id);
 const euro = n => (Math.round(n*100)/100).toFixed(2).replace('.',',') + ' €';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -704,6 +711,7 @@ if (DEMO){
   if (z) API.login('demo@cockpitplus.de','x').then(() => { if (z==='gesperrt') API._lock(); if (z==='offen') API._pastDue(); sessionStorage.setItem('cp_unlocked', deviceKey()); }).then(boot);
   else boot();
 } else boot();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
 })();
 </script>
 </body>
