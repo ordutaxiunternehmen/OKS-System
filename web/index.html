@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Cockpit Plus</title>
+<script src="/config.js"></script>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<style>
+  :root{--bg:#000;--fg:#fff;--accent:#ffd400;--accent-dim:#c7a900;--muted:#9aa0a6;--surface:#0b0b0b;--line:#242424;--danger:#e5484d;--ok:#30a46c;--warn:#ffb224;--r:14px}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--fg);font-family:Arial,Helvetica,sans-serif;-webkit-text-size-adjust:100%}
+  body{min-height:100dvh}
+  .wrap{max-width:460px;margin:0 auto;padding:22px 18px calc(28px + env(safe-area-inset-bottom))}
+  .brand{display:flex;align-items:center;gap:10px;margin:6px 0 22px}
+  .brand img{width:38px;height:38px;border-radius:10px}
+  .brand b{color:var(--accent);font-size:21px;letter-spacing:.6px}
+  .demo{display:none;background:#1c1600;border:1px solid #5c4b00;color:var(--accent);font-size:12px;padding:8px 10px;border-radius:10px;margin-bottom:14px}
+  h1{font-size:22px;margin:0 0 6px} h2{font-size:17px;margin:22px 0 10px}
+  p{line-height:1.45;margin:6px 0} .muted{color:var(--muted);font-size:13px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin:12px 0}
+  label{display:block;font-size:13px;color:#cfcfcf;margin:12px 0 6px}
+  input,select{width:100%;height:46px;border-radius:10px;border:1px solid #333;background:#0a0a0a;color:#fff;padding:0 12px;font-size:16px}
+  input:focus{outline:2px solid var(--accent);border-color:transparent}
+  .row{display:flex;gap:10px} .row>*{flex:1}
+  .btn{display:block;width:100%;height:48px;border:0;border-radius:12px;background:var(--accent);color:#000;font-weight:800;font-size:16px;cursor:pointer;margin-top:16px}
+  .btn:disabled{opacity:.45;cursor:default}
+  .btn.sec{background:#1f1f1f;color:#fff;border:1px solid #333}
+  .btn.danger{background:transparent;color:var(--danger);border:1px solid #4a1a1c}
+  .link{background:none;border:0;color:var(--accent);font-size:14px;padding:10px 0;cursor:pointer;text-decoration:underline}
+  .check{display:flex;gap:10px;align-items:flex-start;margin:14px 0;font-size:14px;line-height:1.4}
+  .check input{width:22px;height:22px;flex:0 0 22px;margin-top:1px;accent-color:var(--accent)}
+  .check a{color:var(--accent)}
+  .err{color:#ff8a8f;font-size:14px;margin-top:10px;min-height:18px}
+  .ok{color:#7ee2a8}
+  .hidden{display:none!important}
+  .veh{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);margin:10px 0;cursor:pointer}
+  .veh:active{border-color:var(--accent)}
+  .veh .ic{width:44px;height:44px;border-radius:12px;background:#1c1600;color:var(--accent);display:grid;place-items:center;font-size:22px}
+  .veh .t{flex:1} .veh .t b{display:block;font-size:16px} .veh .t span{color:var(--muted);font-size:13px}
+  .veh .go{color:var(--accent);font-size:22px}
+  .banner{border-radius:12px;padding:12px 14px;margin:10px 0;font-size:14px;line-height:1.4}
+  .banner.warn{background:#2a1d00;border:1px solid #6b4a00;color:#ffd27a}
+  .banner.bad{background:#2a0c0d;border:1px solid #6b1a1d;color:#ffb1b4}
+  .pin{display:flex;gap:12px;justify-content:center;margin:22px 0}
+  .pin i{width:16px;height:16px;border-radius:50%;border:2px solid #555;display:block}
+  .pin i.f{background:var(--accent);border-color:var(--accent)}
+  .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:300px;margin:0 auto}
+  .pad button{height:62px;border-radius:16px;border:1px solid #2a2a2a;background:#0d0d0d;color:#fff;font-size:24px;font-weight:700}
+  .pad button:active{background:#1c1600;border-color:var(--accent)}
+  .pad .x{background:none;border:0;font-size:15px;color:var(--muted)}
+  table{width:100%;border-collapse:collapse;font-size:14px} td{padding:9px 4px;border-bottom:1px solid #1d1d1d}
+  td:last-child{text-align:right}
+  .pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700}
+  .pill.ok{background:#0f2a1c;color:#7ee2a8} .pill.warn{background:#2a1d00;color:#ffd27a} .pill.bad{background:#2a0c0d;color:#ffb1b4}
+  .foot{margin-top:28px;text-align:center;font-size:12px;color:#666} .foot a{color:#888;margin:0 6px}
+  .mandate{font-size:12px;color:#bdbdbd;line-height:1.5;background:#080808;border:1px solid #1d1d1d;border-radius:10px;padding:10px;margin-top:10px}
+  #appFrame{position:fixed;inset:0;width:100%;height:100dvh;border:0;background:#000;z-index:5}
+  #appChip{position:fixed;z-index:6;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));background:var(--accent);color:#000;border:0;border-radius:999px;padding:10px 14px;font-weight:800;font-size:13px;box-shadow:0 4px 18px rgba(0,0,0,.6)}
+  #appChip.warn{background:var(--warn)}
+  #syncDot{position:fixed;z-index:6;left:10px;bottom:calc(14px + env(safe-area-inset-bottom));font-size:11px;color:#888;background:#000c;padding:4px 8px;border-radius:999px}
+  .spinner{width:34px;height:34px;border-radius:50%;border:3px solid #333;border-top-color:var(--accent);animation:sp 1s linear infinite;margin:40px auto 14px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap" id="shell">
+  <div class="brand"><img src="/icon-192.png" alt=""><b>COCKPIT PLUS</b></div>
+  <div class="demo" id="demoNote">DEMO-Modus – Beispieldaten, keine echten Zahlungen. Wird automatisch ausgeschaltet, sobald der Server eingetragen ist.</div>
+
+  <!-- Laden -->
+  <section id="v-loading"><div class="spinner"></div><p class="muted" style="text-align:center" id="loadMsg">Einen Moment…</p></section>
+
+  <!-- Anmelden -->
+  <section id="v-login" class="hidden">
+    <h1>Anmelden</h1>
+    <p class="muted">Kassenbuch, Fahrtenbuch und Schichtauswertung für Ihr Taxiunternehmen.</p>
+    <label>E-Mail</label><input id="li-email" type="email" autocomplete="email" inputmode="email">
+    <label>Passwort</label><input id="li-pw" type="password" autocomplete="current-password">
+    <div class="err" id="li-err"></div>
+    <button class="btn" id="li-btn">Anmelden</button>
+    <button class="btn sec" data-go="signup">Neu registrieren</button>
+    <button class="link" id="li-forgot">Passwort vergessen?</button>
+  </section>
+
+  <!-- Registrieren: Zugang -->
+  <section id="v-signup" class="hidden">
+    <h1>Registrieren</h1>
+    <p class="muted">Schritt 1 von 3 – Zugang anlegen</p>
+    <label>E-Mail</label><input id="su-email" type="email" autocomplete="email" inputmode="email">
+    <label>Passwort (mind. 10 Zeichen)</label><input id="su-pw" type="password" autocomplete="new-password">
+    <label>Passwort wiederholen</label><input id="su-pw2" type="password" autocomplete="new-password">
+    <div class="err" id="su-err"></div>
+    <button class="btn" id="su-btn">Weiter</button>
+    <button class="link" data-go="login">Ich habe schon ein Konto</button>
+  </section>
+
+  <!-- E-Mail bestätigen -->
+  <section id="v-confirm" class="hidden">
+    <h1>E-Mail bestätigen</h1>
+    <p>Wir haben Ihnen eine E-Mail geschickt. Bitte tippen Sie auf den Link darin und melden Sie sich danach hier an.</p>
+    <button class="btn" data-go="login">Zur Anmeldung</button>
+  </section>
+
+  <!-- Registrieren: Unternehmen + Fahrzeuge + AGB -->
+  <section id="v-company" class="hidden">
+    <h1>Ihr Unternehmen</h1>
+    <p class="muted">Schritt 2 von 3 – Firmendaten und Fahrzeuge</p>
+    <label>Firmenname</label><input id="co-name" autocomplete="organization">
+    <label>Inhaber / Ansprechpartner</label><input id="co-contact" autocomplete="name">
+    <label>Straße und Hausnummer</label><input id="co-street" autocomplete="street-address">
+    <div class="row"><div><label>PLZ</label><input id="co-zip" inputmode="numeric" autocomplete="postal-code"></div><div><label>Ort</label><input id="co-city" autocomplete="address-level2"></div></div>
+    <label>Telefon</label><input id="co-phone" type="tel" autocomplete="tel">
+    <label>USt-IdNr. (falls vorhanden)</label><input id="co-vat">
+    <h2>Fahrzeuge</h2>
+    <p class="muted">Jedes Fahrzeug bekommt sein eigenes Kassenbuch, Fahrtenbuch und seine eigene Schichtauswertung. Preis: <b id="co-price">7,00 €</b> pro Fahrzeug und Monat.</p>
+    <div id="co-vehicles"></div>
+    <button class="btn sec" id="co-addveh">+ Weiteres Fahrzeug</button>
+    <div class="card" style="margin-top:18px"><div class="row" style="align-items:center"><span>Monatlich gesamt</span><b id="co-total" style="text-align:right;color:var(--accent);font-size:18px">7,00 €</b></div></div>
+    <label class="check"><input type="checkbox" id="co-b2b"><span>Ich handle als Unternehmer (§ 14 BGB) für mein Taxi- bzw. Mietwagenunternehmen.</span></label>
+    <label class="check"><input type="checkbox" id="co-agb"><span>Ich habe die <a href="#" data-doc="agb">Allgemeinen Geschäftsbedingungen</a> (Version <span class="agbv">1.0</span>) gelesen und akzeptiere sie. Die <a href="#" data-doc="ds">Datenschutzerklärung</a> habe ich zur Kenntnis genommen.</span></label>
+    <div class="err" id="co-err"></div>
+    <button class="btn" id="co-btn">Weiter zur Zahlung</button>
+  </section>
+
+  <!-- AGB neu bestätigen -->
+  <section id="v-agb" class="hidden">
+    <h1>Neue AGB</h1>
+    <p>Unsere Allgemeinen Geschäftsbedingungen wurden aktualisiert (Version <span class="agbv"></span>). Bitte lesen und bestätigen Sie sie, um Cockpit Plus weiter zu nutzen.</p>
+    <p><a href="#" data-doc="agb" style="color:var(--accent)">AGB lesen</a></p>
+    <label class="check"><input type="checkbox" id="agb-ok"><span>Ich akzeptiere die AGB in Version <span class="agbv"></span>.</span></label>
+    <div class="err" id="agb-err"></div>
+    <button class="btn" id="agb-btn">Bestätigen</button>
+  </section>
+
+  <!-- Zahlung einrichten -->
+  <section id="v-pay" class="hidden">
+    <h1>Zahlung einrichten</h1>
+    <p class="muted">Schritt 3 von 3 – monatlich per SEPA-Lastschrift</p>
+    <div class="card"><div class="row"><span><span id="pay-n">1</span> Fahrzeug(e) × <span id="pay-p">7,00 €</span></span><b style="text-align:right;color:var(--accent)" id="pay-total">7,00 €</b></div>
+      <p class="muted" style="margin-top:8px">Der erste Monat wird sofort eingezogen, danach jeden Monat automatisch. Kündbar zum Monatsende.</p></div>
+    <label>Kontoinhaber</label><input id="pay-holder" autocomplete="name">
+    <label>IBAN</label><input id="pay-iban" autocomplete="off" placeholder="DE00 0000 0000 0000 0000 00" style="text-transform:uppercase;letter-spacing:.5px">
+    <div class="mandate" id="pay-mandate"></div>
+    <label class="check"><input type="checkbox" id="pay-ok"><span>Ich erteile das SEPA-Lastschriftmandat.</span></label>
+    <div class="err" id="pay-err"></div>
+    <button class="btn" id="pay-btn">Kostenpflichtig abonnieren</button>
+    <button class="link" id="pay-alt">Lieber mit Kreditkarte oder PayPal bezahlen</button>
+  </section>
+
+  <!-- PIN festlegen -->
+  <section id="v-pinset" class="hidden">
+    <h1>PIN festlegen</h1>
+    <p class="muted" id="pinset-sub">Mit dieser PIN öffnen Sie Cockpit Plus auf diesem Gerät. 4 bis 6 Ziffern.</p>
+    <div class="pin" id="pinset-dots"></div>
+    <div class="pad" id="pinset-pad"></div>
+    <div class="err" id="pinset-err" style="text-align:center"></div>
+  </section>
+
+  <!-- PIN eingeben -->
+  <section id="v-pin" class="hidden">
+    <h1 style="text-align:center">PIN eingeben</h1>
+    <p class="muted" style="text-align:center" id="pin-company"></p>
+    <div class="pin" id="pin-dots"></div>
+    <div class="pad" id="pin-pad"></div>
+    <div class="err" id="pin-err" style="text-align:center"></div>
+    <div style="text-align:center"><button class="link" id="pin-forgot">PIN vergessen? Neu anmelden</button></div>
+  </section>
+
+  <!-- Fahrzeug wählen -->
+  <section id="v-vehicles" class="hidden">
+    <h1 id="veh-hello">Fahrzeug wählen</h1>
+    <div id="veh-banner"></div>
+    <div id="veh-list"></div>
+    <button class="btn sec" id="veh-add">+ Fahrzeug hinzufügen</button>
+    <button class="btn sec" data-go="account">Konto, Abo &amp; Zahlungen</button>
+  </section>
+
+  <!-- Fahrzeug hinzufügen -->
+  <section id="v-addveh" class="hidden">
+    <h1>Fahrzeug hinzufügen</h1>
+    <label>Bezeichnung</label><input id="av-label" placeholder="z. B. Taxi 1234">
+    <label>Konzessionsnummer</label><input id="av-konz">
+    <label>Kennzeichen</label><input id="av-kz" style="text-transform:uppercase">
+    <div class="card"><p>Ihr Abo erhöht sich um <b id="av-price">7,00 €</b> im Monat. Für den laufenden Monat wird nur der Restzeitraum anteilig berechnet.</p></div>
+    <div class="err" id="av-err"></div>
+    <button class="btn" id="av-btn">Kostenpflichtig hinzufügen</button>
+    <button class="btn sec" data-go="vehicles">Abbrechen</button>
+  </section>
+
+  <!-- Konto -->
+  <section id="v-account" class="hidden">
+    <h1>Konto &amp; Abo</h1>
+    <div class="card" id="acc-box"></div>
+    <h2>Fahrzeuge</h2>
+    <div id="acc-veh"></div>
+    <h2>Zahlungen</h2>
+    <div class="card"><table id="acc-pay"></table></div>
+    <button class="btn sec" data-go="vehicles">Zurück</button>
+    <button class="btn sec" id="acc-logout">Abmelden</button>
+    <button class="btn danger" id="acc-cancel">Abo kündigen</button>
+  </section>
+
+  <!-- Gesperrt -->
+  <section id="v-locked" class="hidden">
+    <h1>Zugang gesperrt</h1>
+    <div class="banner bad" id="lk-reason">Ihr Abo ist nicht bezahlt.</div>
+    <p>Ihre Daten sind sicher gespeichert. Sobald die Zahlung eingegangen ist, wird Cockpit Plus automatisch wieder freigeschaltet.</p>
+    <div class="err" id="lk-err"></div>
+    <button class="btn" id="lk-pay">Offenen Betrag jetzt bezahlen</button>
+    <button class="btn sec" id="lk-card">Mit Kreditkarte / PayPal bezahlen</button>
+    <button class="btn sec" id="lk-logout">Abmelden</button>
+  </section>
+
+  <!-- Demo: Platzhalter statt echter App -->
+  <section id="v-demoapp" class="hidden">
+    <h1 id="da-title">Cockpit Plus</h1>
+    <div class="card"><p>Hier startet jetzt <b>Cockpit Plus</b> mit Kassenbuch, Fahrtenbuch und Schichtauswertung – nur für dieses Fahrzeug.</p>
+    <p class="muted">Im Echtbetrieb lädt der Server das Programm erst an dieser Stelle, und nur bei bezahltem Abo.</p></div>
+    <button class="btn sec" data-go="vehicles">Fahrzeug wechseln</button>
+  </section>
+
+  <div class="foot"><a href="#" data-doc="agb">AGB</a>·<a href="#" data-doc="ds">Datenschutz</a>·<a href="#" data-doc="imp">Impressum</a></div>
+</div>
+
+<script>
+/* =====================================================================
+   Cockpit Plus – Konto, Abo und Start der App
+   ===================================================================== */
+(function(){
+const CFG = window.CP_CONFIG || {};
+const DEMO = !CFG.SUPABASE_URL || /[?&]demo=1/.test(location.search);
+const $ = id => document.getElementById(id);
+const euro = n => (Math.round(n*100)/100).toFixed(2).replace('.',',') + ' €';
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate = d => d ? new Date(d).toLocaleDateString('de-DE') : '–';
+const VIEWS = ['loading','login','signup','confirm','company','agb','pay','pinset','pin','vehicles','addveh','account','locked','demoapp'];
+function show(v){ VIEWS.forEach(x => $('v-'+x).classList.toggle('hidden', x!==v)); window.scrollTo(0,0); }
+document.addEventListener('click', e => {
+  const g = e.target.closest('[data-go]'); if (g){ e.preventDefault(); nav(g.dataset.go); }
+  const d = e.target.closest('[data-doc]'); if (d){ e.preventDefault();
+    const url = {agb:CFG.AGB_URL||'/agb.html', ds:CFG.DATENSCHUTZ_URL||'/datenschutz.html', imp:CFG.IMPRESSUM_URL||'/impressum.html'}[d.dataset.doc];
+    window.open(url, '_blank'); }
+});
+const ERR = {
+  'Invalid login credentials':'E-Mail oder Passwort ist falsch.',
+  'Email not confirmed':'Bitte bestätigen Sie zuerst Ihre E-Mail-Adresse.',
+  'User already registered':'Diese E-Mail ist bereits registriert.',
+  iban_invalid:'Die IBAN ist ungültig.', holder_missing:'Bitte den Kontoinhaber angeben.',
+  mandate_not_accepted:'Bitte das SEPA-Mandat bestätigen.', locked:'Ihr Zugang ist gesperrt.',
+  last_vehicle:'Das letzte Fahrzeug kann nicht entfernt werden – bitte stattdessen kündigen.',
+  device_limit:'Die maximale Anzahl an Geräten ist erreicht. Bitte wenden Sie sich an den Support.',
+  device_revoked:'Dieses Gerät wurde abgemeldet. Bitte neu anmelden.',
+  agb_version_mismatch:'Die AGB wurden gerade aktualisiert. Bitte Seite neu laden.',
+};
+const msg = e => { const m = (e && (e.message || e.error || e)) + ''; for (const k in ERR) if (m.includes(k)) return ERR[k]; return 'Es ist ein Fehler aufgetreten. Bitte erneut versuchen.'; };
+
+/* ------------------------------ Gerät ------------------------------ */
+function deviceKey(){
+  let k = localStorage.getItem('cp_device_key');
+  if (!k){ k = (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36).slice(2)); localStorage.setItem('cp_device_key', k); }
+  return k;
+}
+const deviceName = () => { const u = navigator.userAgent; return /iPhone/.test(u)?'iPhone':/iPad/.test(u)?'iPad':/Android/.test(u)?'Android':/Mac/.test(u)?'Mac':/Windows/.test(u)?'Windows-PC':'Gerät'; };
+
+/* ============================== Server ============================== */
+let API;
+if (!DEMO) {
+  API = (function(){
+    let sb;
+    const ready = import('https://esm.sh/@supabase/supabase-js@2.45.4').then(m => {
+      sb = m.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+    });
+    const fn = async (name, body) => { await ready; const { data, error } = await sb.functions.invoke(name, { body });
+      if (error){ let d; try { d = await error.context.json(); } catch(_){} throw new Error(d?.error || error.message); }
+      if (data?.error) throw new Error(data.error); return data; };
+    const rpc = async (name, args) => { await ready; const { data, error } = await sb.rpc(name, args); if (error) throw error; return data; };
+    return {
+      ready,
+      get sb(){ return sb; },
+      async session(){ await ready; return (await sb.auth.getSession()).data.session; },
+      async login(email, pw){ await ready; const { error } = await sb.auth.signInWithPassword({ email, password: pw }); if (error) throw error; },
+      async signup(email, pw){ await ready; const { data, error } = await sb.auth.signUp({ email, password: pw, options: { emailRedirectTo: location.origin } }); if (error) throw error; return !!data.session; },
+      async forgot(email){ await ready; await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin }); },
+      async logout(){ await ready; await sb.auth.signOut(); },
+      status: () => rpc('my_status'),
+      registerCompany: a => rpc('register_company', a),
+      acceptAgb: v => rpc('accept_agb', { p_agb_version: v, p_user_agent: navigator.userAgent }),
+      registerDevice: pin => rpc('register_device', { p_device_key: deviceKey(), p_device_name: deviceName(), p_pin: pin }),
+      verifyPin: pin => rpc('verify_pin', { p_device_key: deviceKey(), p_pin: pin }),
+      deviceState: () => rpc('device_state', { p_device_key: deviceKey() }),
+      billing: body => fn('billing', body),
+      async payments(){ await ready; const { data } = await sb.from('payments').select('*').order('created_at', { ascending: false }).limit(24); return data || []; },
+      async appCode(){
+        const s = await this.session();
+        const r = await fetch(CFG.SUPABASE_URL + '/functions/v1/app-code', { headers: { Authorization: 'Bearer ' + s.access_token, apikey: CFG.SUPABASE_ANON_KEY, 'x-device-key': deviceKey() } });
+        if (!r.ok){ let d={}; try{ d = await r.json(); }catch(_){} throw new Error(d.error || ('http_' + r.status)); }
+        return r.text();
+      },
+      // ---- Daten pro Fahrzeug ----
+      async kvLoad(vid){ await ready; let out = [], from = 0;
+        for(;;){ const { data, error } = await sb.from('vehicle_kv').select('key,value').eq('vehicle_id', vid).range(from, from + 999); if (error) throw error;
+          out = out.concat(data); if (data.length < 1000) break; from += 1000; } return out; },
+      async kvUpsert(vid, rows){ await ready; const { error } = await sb.from('vehicle_kv').upsert(rows.map(r => ({ vehicle_id: vid, key: r.key, value: r.value, updated_at: new Date().toISOString() }))); if (error) throw error; },
+      async kvDelete(vid, keys){ await ready; const { error } = await sb.from('vehicle_kv').delete().eq('vehicle_id', vid).in('key', keys); if (error) throw error; },
+      async fileList(vid){ await ready; let out = [], off = 0;
+        for(;;){ const { data, error } = await sb.storage.from('vehicle-files').list(vid + '/idb', { limit: 1000, offset: off }); if (error) throw error;
+          out = out.concat(data); if (data.length < 1000) break; off += 1000; } return out.map(x => x.name); },
+      async fileGet(vid, name){ await ready; const { data, error } = await sb.storage.from('vehicle-files').download(vid + '/idb/' + name); if (error) throw error; return data.text(); },
+      async filePut(vid, name, text){ await ready; const { error } = await sb.storage.from('vehicle-files').upload(vid + '/idb/' + name, new Blob([text], { type: 'text/plain' }), { upsert: true }); if (error) throw error; },
+      async fileDel(vid, name){ await ready; await sb.storage.from('vehicle-files').remove([vid + '/idb/' + name]); },
+    };
+  })();
+} else {
+  /* --------------------------- DEMO-Backend --------------------------- */
+  $('demoNote').style.display = 'block';
+  const DB = JSON.parse(sessionStorage.getItem('cp_demo') || 'null') || { user: null, company: null, vehicles: [], agb: null, pin: null, payments: [] };
+  const save = () => sessionStorage.setItem('cp_demo', JSON.stringify(DB));
+  const wait = (ms=350) => new Promise(r => setTimeout(r, ms));
+  const PRICE = 7, AGBV = '1.0';
+  API = {
+    ready: Promise.resolve(),
+    async session(){ return DB.user ? { user: DB.user } : null; },
+    async login(email, pw){ await wait(); if (!email || !pw) throw new Error('Invalid login credentials');
+      if (!DB.user){ // Demo: Beispielkonto
+        DB.user = { email }; DB.company = { company_name: 'Taxi Demo GmbH', contact_name: 'Max Mustermann', email, status: 'active', created_at: new Date().toISOString(), next_charge_on: new Date(Date.now()+18*864e5).toISOString() };
+        DB.vehicles = [{ id:'v1', label:'Taxi 1234', konzession:'K-1234', kennzeichen:'B-TX 1234' },{ id:'v2', label:'Taxi 5678', konzession:'K-5678', kennzeichen:'B-TX 5678' }];
+        DB.agb = AGBV; DB.payments = [{ amount:14, status:'paid', kind:'recurring', created_at:new Date(Date.now()-12*864e5).toISOString(), description:'Cockpit Plus – 2 Fahrzeug(e)' }];
+      } save(); },
+    async signup(email){ await wait(); DB.user = { email }; DB.company = null; DB.vehicles = []; DB.agb = null; DB.pin = null; DB.payments = []; save(); return true; },
+    async forgot(){ await wait(); },
+    async logout(){ sessionStorage.removeItem('cp_demo'); sessionStorage.removeItem('cp_unlocked'); location.href = location.pathname + (DEMO && CFG.SUPABASE_URL ? '?demo=1' : ''); },
+    async status(){ await wait(150); const c = DB.company;
+      return { company: c, can_use: !!c && (c.status==='active' || c.status==='past_due'), vehicles: DB.vehicles, agb_current: AGBV, agb_accepted: DB.agb===AGBV, price_per_vehicle: PRICE, is_admin: false }; },
+    async registerCompany(a){ await wait(); DB.company = { company_name: a.p_company_name, contact_name: a.p_contact_name, email: DB.user.email, status: 'pending', created_at: new Date().toISOString() };
+      DB.vehicles = a.p_vehicles.map((v,i) => ({ id: 'v'+(i+1), ...v })); DB.agb = a.p_agb_version; save(); },
+    async acceptAgb(v){ await wait(); DB.agb = v; save(); },
+    async registerDevice(pin){ await wait(); DB.pin = pin; save(); return { ok: true }; },
+    async deviceState(){ return DB.pin ? 'ok' : 'unknown'; },
+    async verifyPin(pin){ await wait(200); if (!DB.pin) return { ok:false, reason:'unknown_device' }; return pin===DB.pin ? { ok:true } : { ok:false, reason:'wrong_pin', left: 3 }; },
+    async billing(b){ await wait(600);
+      if (b.action==='setup_sepa'){ if (!/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(String(b.iban).replace(/\s/g,'').toUpperCase())) throw new Error('iban_invalid');
+        DB.company.status='active'; DB.company.next_charge_on=new Date(Date.now()+30*864e5).toISOString();
+        DB.payments.unshift({ amount: DB.vehicles.length*PRICE, status:'pending', kind:'first', created_at:new Date().toISOString(), description:'Erster Monat' }); save(); return { ok:true }; }
+      if (b.action==='setup_checkout'){ DB.company.status='active'; save(); return { checkoutUrl: location.pathname + location.search }; }
+      if (b.action==='add_vehicle'){ DB.vehicles.push({ id:'v'+(DB.vehicles.length+1)+Date.now()%1000, label:b.label, konzession:b.konzession, kennzeichen:b.kennzeichen });
+        DB.payments.unshift({ amount: 4.20, status:'pending', kind:'prorated', created_at:new Date().toISOString(), description:'Anteilig – '+b.label }); save(); return { ok:true }; }
+      if (b.action==='remove_vehicle'){ if (DB.vehicles.length<=1) throw new Error('last_vehicle'); DB.vehicles = DB.vehicles.filter(v => v.id!==b.vehicle_id); save(); return { ok:true }; }
+      if (b.action==='pay_now'){ DB.company.status='active'; save(); return { ok:true, pending:true }; }
+      if (b.action==='cancel'){ DB.company.cancel_at = DB.company.next_charge_on; save(); return { ok:true, until: DB.company.next_charge_on }; }
+    },
+    async payments(){ return DB.payments; },
+    // Demo-Hilfen
+    _lock(){ DB.company.status='locked'; DB.company.locked_reason='Zahlung nicht eingegangen'; save(); },
+    _pastDue(){ DB.company.status='past_due'; DB.company.grace_until=new Date(Date.now()+9*864e5).toISOString(); save(); },
+  };
+  window.CP_DEMO = API;
+}
+
+/* ============================== Ablauf ============================== */
+let ST = null; // Status vom Server
+async function refresh(){ ST = await API.status(); document.querySelectorAll('.agbv').forEach(e => e.textContent = ST.agb_current); return ST; }
+
+async function boot(){
+  show('loading');
+  try {
+    if (/zahlung=fertig/.test(location.search)) $('loadMsg').textContent = 'Zahlung wird geprüft…';
+    const s = await API.session();
+    if (!s) return show('login');
+    await refresh();
+    if (!ST.company) return startCompany();
+    if (!ST.agb_accepted) return show('agb');
+    if (ST.company.status === 'pending') return startPay();
+    if (sessionStorage.getItem('cp_unlocked') !== deviceKey()){
+      const ds = await API.deviceState();
+      if (ds === 'unknown' || ds === 'no_pin') return startPinSet();
+      if (ds === 'revoked'){ await API.logout(); return show('login'); }
+      return startPin();
+    }
+    afterUnlock();
+  } catch(e){ console.error(e); $('loadMsg').textContent = 'Keine Verbindung zum Server. Bitte später erneut versuchen.'; }
+}
+
+function afterUnlock(){
+  if (!ST.can_use) return startLocked();
+  const last = sessionStorage.getItem('cp_vehicle');
+  if (last && ST.vehicles.some(v => v.id === last) && !/wechseln/.test(location.search)) return launch(last);
+  startVehicles();
+}
+
+function nav(v){
+  if (v==='vehicles') return refresh().then(startVehicles);
+  if (v==='account') return startAccount();
+  if (v==='login') return show('login');
+  if (v==='signup') return show('signup');
+  show(v);
+}
+
+/* ------------------------------ Anmelden ------------------------------ */
+$('li-btn').onclick = async () => {
+  $('li-err').textContent=''; $('li-btn').disabled = true;
+  try { await API.login($('li-email').value.trim(), $('li-pw').value); await boot(); }
+  catch(e){ $('li-err').textContent = msg(e); } finally { $('li-btn').disabled = false; }
+};
+$('li-pw').addEventListener('keydown', e => { if (e.key==='Enter') $('li-btn').click(); });
+$('li-forgot').onclick = async () => {
+  const em = $('li-email').value.trim(); if (!em){ $('li-err').textContent = 'Bitte zuerst die E-Mail eintragen.'; return; }
+  await API.forgot(em); $('li-err').innerHTML = '<span class="ok">Wir haben Ihnen einen Link zum Zurücksetzen geschickt.</span>';
+};
+
+$('su-btn').onclick = async () => {
+  const em = $('su-email').value.trim(), pw = $('su-pw').value;
+  $('su-err').textContent='';
+  if (!/^\S+@\S+\.\S+$/.test(em)) return $('su-err').textContent = 'Bitte eine gültige E-Mail angeben.';
+  if (pw.length < 10) return $('su-err').textContent = 'Das Passwort muss mindestens 10 Zeichen haben.';
+  if (pw !== $('su-pw2').value) return $('su-err').textContent = 'Die Passwörter stimmen nicht überein.';
+  $('su-btn').disabled = true;
+  try { const hasSession = await API.signup(em, pw); if (hasSession) await boot(); else show('confirm'); }
+  catch(e){ $('su-err').textContent = msg(e); } finally { $('su-btn').disabled = false; }
+};
+
+/* --------------------------- Unternehmen --------------------------- */
+function vehRow(i){
+  const d = document.createElement('div'); d.className = 'card'; d.dataset.veh = '1';
+  d.innerHTML = `<b style="color:var(--accent)">Fahrzeug ${i}</b>
+    <label>Bezeichnung</label><input class="cv-label" placeholder="z. B. Taxi 1234">
+    <div class="row"><div><label>Konzessionsnr.</label><input class="cv-konz"></div><div><label>Kennzeichen</label><input class="cv-kz" style="text-transform:uppercase"></div></div>
+    ${i>1 ? '<button class="link cv-del">Entfernen</button>' : ''}`;
+  const del = d.querySelector('.cv-del'); if (del) del.onclick = () => { d.remove(); renumber(); };
+  return d;
+}
+function renumber(){ const rows = [...document.querySelectorAll('#co-vehicles [data-veh]')];
+  rows.forEach((r,i) => r.querySelector('b').textContent = 'Fahrzeug ' + (i+1));
+  $('co-total').textContent = euro(rows.length * (ST?.price_per_vehicle || 7)); }
+function startCompany(){
+  $('co-price').textContent = euro(ST?.price_per_vehicle || 7);
+  if (!$('co-vehicles').children.length) $('co-vehicles').appendChild(vehRow(1));
+  renumber(); show('company');
+}
+$('co-addveh').onclick = () => { $('co-vehicles').appendChild(vehRow($('co-vehicles').children.length + 1)); renumber(); };
+$('co-btn').onclick = async () => {
+  const e = $('co-err'); e.textContent = '';
+  const need = ['co-name','co-contact','co-street','co-zip','co-city','co-phone'];
+  if (need.some(id => !$(id).value.trim())) return e.textContent = 'Bitte alle Pflichtfelder ausfüllen.';
+  const vehicles = [...document.querySelectorAll('#co-vehicles [data-veh]')].map(r => ({
+    label: r.querySelector('.cv-label').value.trim(), konzession: r.querySelector('.cv-konz').value.trim(), kennzeichen: r.querySelector('.cv-kz').value.trim().toUpperCase() }));
+  if (vehicles.some(v => !v.label)) return e.textContent = 'Bitte jedem Fahrzeug eine Bezeichnung geben.';
+  if (!$('co-b2b').checked) return e.textContent = 'Cockpit Plus ist nur für Unternehmer erhältlich.';
+  if (!$('co-agb').checked) return e.textContent = 'Bitte die AGB akzeptieren.';
+  $('co-btn').disabled = true;
+  try {
+    await API.registerCompany({ p_company_name: $('co-name').value.trim(), p_contact_name: $('co-contact').value.trim(),
+      p_street: $('co-street').value.trim(), p_zip: $('co-zip').value.trim(), p_city: $('co-city').value.trim(),
+      p_phone: $('co-phone').value.trim(), p_vat_id: $('co-vat').value.trim(), p_agb_version: ST.agb_current,
+      p_user_agent: navigator.userAgent, p_vehicles: vehicles });
+    await refresh(); startPay();
+  } catch(err){ e.textContent = msg(err); } finally { $('co-btn').disabled = false; }
+};
+
+/* ------------------------------- AGB ------------------------------- */
+$('agb-btn').onclick = async () => {
+  if (!$('agb-ok').checked) return $('agb-err').textContent = 'Bitte bestätigen.';
+  try { await API.acceptAgb(ST.agb_current); boot(); } catch(e){ $('agb-err').textContent = msg(e); }
+};
+
+/* ------------------------------ Zahlung ------------------------------ */
+function startPay(){
+  const n = ST.vehicles.length, p = ST.price_per_vehicle;
+  $('pay-n').textContent = n; $('pay-p').textContent = euro(p); $('pay-total').textContent = euro(n*p) + ' / Monat';
+  $('pay-holder').value = $('pay-holder').value || ST.company.contact_name || '';
+  const cred = esc(CFG.CREDITOR_NAME || 'den Betreiber von Cockpit Plus');
+  $('pay-mandate').innerHTML = `<b>SEPA-Lastschriftmandat</b><br>Ich ermächtige ${cred} und dessen Zahlungsdienstleister Mollie B.V., Zahlungen von meinem Konto mittels Lastschrift einzuziehen. Zugleich weise ich mein Kreditinstitut an, die von ${cred} bzw. Mollie B.V. auf mein Konto gezogenen Lastschriften einzulösen.<br><br>Hinweis: Ich kann innerhalb von acht Wochen, beginnend mit dem Belastungsdatum, die Erstattung des belasteten Betrages verlangen. Es gelten dabei die mit meinem Kreditinstitut vereinbarten Bedingungen.`;
+  show('pay');
+}
+$('pay-btn').onclick = async () => {
+  const e = $('pay-err'); e.textContent = '';
+  if (!$('pay-ok').checked) return e.textContent = 'Bitte das SEPA-Mandat bestätigen.';
+  $('pay-btn').disabled = true;
+  try { await API.billing({ action:'setup_sepa', iban: $('pay-iban').value, account_holder: $('pay-holder').value.trim(), mandate_accepted: true });
+        await refresh(); startPinSet(); }
+  catch(err){ e.textContent = msg(err); } finally { $('pay-btn').disabled = false; }
+};
+$('pay-alt').onclick = async () => {
+  try { const r = await API.billing({ action:'setup_checkout' }); location.href = r.checkoutUrl; } catch(err){ $('pay-err').textContent = msg(err); }
+};
+
+/* -------------------------------- PIN -------------------------------- */
+function makePad(padId, dotsId, len, onDone){
+  let val = ''; const dots = $(dotsId), pad = $(padId);
+  const draw = () => { dots.innerHTML = ''; for (let i=0;i<len;i++){ const d=document.createElement('i'); if (i<val.length) d.className='f'; dots.appendChild(d); } };
+  pad.innerHTML = ''; [1,2,3,4,5,6,7,8,9,'',0,'⌫'].forEach(k => { const b = document.createElement('button');
+    b.textContent = k; if (k==='') { b.className='x'; b.disabled=true; } if (k==='⌫') b.className='x';
+    b.onclick = () => { if (k==='⌫') val = val.slice(0,-1); else if (k!=='' && val.length<len) val += k; draw();
+      if (val.length===len){ const v = val; val=''; setTimeout(() => { draw(); onDone(v); }, 120); } };
+    pad.appendChild(b); });
+  draw();
+  return { reset(){ val=''; draw(); } };
+}
+let firstPin = null;
+function startPinSet(){
+  firstPin = null; $('pinset-sub').textContent = 'Mit dieser PIN öffnen Sie Cockpit Plus auf diesem Gerät (4 Ziffern).'; $('pinset-err').textContent='';
+  makePad('pinset-pad','pinset-dots',4, async v => {
+    if (!firstPin){ firstPin = v; $('pinset-sub').textContent = 'Bitte die PIN noch einmal eingeben.'; return; }
+    if (v !== firstPin){ firstPin = null; $('pinset-err').textContent = 'Die PINs stimmen nicht überein. Bitte neu festlegen.'; $('pinset-sub').textContent = 'PIN festlegen (4 Ziffern).'; return; }
+    try { await API.registerDevice(v); sessionStorage.setItem('cp_unlocked', deviceKey()); await refresh(); afterUnlock(); }
+    catch(e){ $('pinset-err').textContent = msg(e); firstPin = null; }
+  });
+  show('pinset');
+}
+function startPin(){
+  $('pin-company').textContent = ST.company.company_name; $('pin-err').textContent = '';
+  const pad = makePad('pin-pad','pin-dots',4, async v => {
+    const r = await API.verifyPin(v);
+    if (r.ok){ sessionStorage.setItem('cp_unlocked', deviceKey()); return afterUnlock(); }
+    if (r.reason==='too_many'){ $('pin-err').textContent = 'Zu viele Fehlversuche. Bitte neu anmelden.'; setTimeout(async () => { await API.logout(); show('login'); }, 1600); return; }
+    $('pin-err').textContent = 'Falsche PIN.' + (r.left!=null ? ' Noch ' + r.left + ' Versuch(e).' : ''); pad.reset();
+  });
+  show('pin');
+}
+$('pin-forgot').onclick = async () => { await API.logout(); sessionStorage.clear(); show('login'); };
+
+/* ----------------------------- Fahrzeuge ----------------------------- */
+function bannerHtml(){
+  const c = ST.company;
+  if (c.status==='past_due'){
+    const days = Math.max(0, Math.ceil((new Date(c.grace_until) - Date.now())/864e5));
+    return `<div class="banner warn"><b>Zahlung fehlgeschlagen.</b> Bitte innerhalb von ${days} Tag(en) bezahlen, sonst wird der Zugang gesperrt. <button class="link" id="bn-pay" style="padding:4px 0">Jetzt bezahlen</button></div>`;
+  }
+  if (c.cancel_at) return `<div class="banner warn">Ihr Abo ist zum ${fmtDate(c.cancel_at)} gekündigt.</div>`;
+  return '';
+}
+function startVehicles(){
+  if (!ST.can_use) return startLocked();
+  $('veh-hello').textContent = 'Fahrzeug wählen';
+  $('veh-banner').innerHTML = bannerHtml();
+  const bp = $('bn-pay'); if (bp) bp.onclick = payNow;
+  $('veh-list').innerHTML = ST.vehicles.map(v => `<div class="veh" data-vid="${esc(v.id)}"><div class="ic">🚕</div>
+    <div class="t"><b>${esc(v.label)}</b><span>${esc([v.kennzeichen, v.konzession && ('Konz. ' + v.konzession)].filter(Boolean).join(' · ') || 'Kassenbuch · Fahrtenbuch · Schichten')}</span></div><div class="go">›</div></div>`).join('');
+  document.querySelectorAll('#veh-list .veh').forEach(el => el.onclick = () => launch(el.dataset.vid));
+  show('vehicles');
+}
+$('veh-add').onclick = () => { $('av-price').textContent = euro(ST.price_per_vehicle); ['av-label','av-konz','av-kz'].forEach(i => $(i).value=''); $('av-err').textContent=''; show('addveh'); };
+$('av-btn').onclick = async () => {
+  if (!$('av-label').value.trim()) return $('av-err').textContent = 'Bitte eine Bezeichnung eingeben.';
+  $('av-btn').disabled = true;
+  try { await API.billing({ action:'add_vehicle', label: $('av-label').value.trim(), konzession: $('av-konz').value.trim(), kennzeichen: $('av-kz').value.trim().toUpperCase() });
+        await refresh(); startVehicles(); }
+  catch(e){ $('av-err').textContent = msg(e); } finally { $('av-btn').disabled = false; }
+};
+
+/* ------------------------------- Konto ------------------------------- */
+const PAYST = { paid:['ok','bezahlt'], settled:['ok','ausgeglichen'], pending:['warn','in Bearbeitung'], open:['warn','offen'], failed:['bad','fehlgeschlagen'], expired:['bad','abgelaufen'], canceled:['bad','abgebrochen'], charged_back:['bad','zurückgebucht'] };
+async function startAccount(){
+  show('loading'); await refresh(); const c = ST.company, n = ST.vehicles.length;
+  const stTxt = { active:['ok','Aktiv'], past_due:['warn','Zahlung offen'], locked:['bad','Gesperrt'], pending:['warn','Zahlung fehlt'], cancelled:['bad','Gekündigt'] }[c.status] || ['warn', c.status];
+  $('acc-box').innerHTML = `<div class="row"><b>${esc(c.company_name)}</b><span style="text-align:right"><span class="pill ${stTxt[0]}">${stTxt[1]}</span></span></div>
+    <p class="muted">${esc(c.email)}</p>
+    <table><tr><td>Fahrzeuge</td><td>${n}</td></tr><tr><td>Monatlich</td><td><b>${euro(n*ST.price_per_vehicle)}</b></td></tr>
+    <tr><td>Nächste Abbuchung</td><td>${c.cancel_at ? 'gekündigt zum ' + fmtDate(c.cancel_at) : fmtDate(c.next_charge_on)}</td></tr><tr><td>Kunde seit</td><td>${fmtDate(c.created_at)}</td></tr></table>`;
+  $('acc-veh').innerHTML = ST.vehicles.map(v => `<div class="veh"><div class="ic">🚕</div><div class="t"><b>${esc(v.label)}</b><span>${esc(v.kennzeichen||'')}</span></div>
+    ${n>1 ? `<button class="link" data-rm="${esc(v.id)}" style="color:#ff8a8f">Abbestellen</button>` : ''}</div>`).join('');
+  document.querySelectorAll('[data-rm]').forEach(b => b.onclick = async () => {
+    if (!confirm('Fahrzeug abbestellen? Das Abo wird ab dem nächsten Monat günstiger. Die Daten dieses Fahrzeugs sind danach nicht mehr in der App erreichbar – bitte vorher exportieren.')) return;
+    try { await API.billing({ action:'remove_vehicle', vehicle_id: b.dataset.rm }); startAccount(); } catch(e){ alert(msg(e)); } });
+  const pays = await API.payments();
+  $('acc-pay').innerHTML = pays.length ? pays.map(p => { const s = PAYST[p.status] || ['warn', p.status];
+    return `<tr><td>${fmtDate(p.paid_at || p.created_at)}<br><span class="muted">${esc(p.description||'')}</span></td><td>${euro(p.amount)}<br><span class="pill ${s[0]}">${s[1]}</span></td></tr>`; }).join('')
+    : '<tr><td class="muted">Noch keine Zahlungen.</td><td></td></tr>';
+  $('acc-cancel').classList.toggle('hidden', !!c.cancel_at);
+  show('account');
+}
+$('acc-logout').onclick = async () => { await API.logout(); sessionStorage.clear(); show('login'); };
+$('acc-cancel').onclick = async () => {
+  if (!confirm('Abo wirklich kündigen? Sie können Cockpit Plus bis zum Ende des bezahlten Monats nutzen. Bitte exportieren Sie vorher Ihre Daten.')) return;
+  try { const r = await API.billing({ action:'cancel' }); alert('Gekündigt zum ' + fmtDate(r.until) + '.'); startAccount(); } catch(e){ alert(msg(e)); }
+};
+
+/* ------------------------------ Gesperrt ------------------------------ */
+function startLocked(){
+  const c = ST.company;
+  $('lk-reason').textContent = c.status==='cancelled' ? 'Ihr Abo ist beendet.' : (c.locked_reason || 'Ihr Abo ist nicht bezahlt.');
+  $('lk-pay').classList.toggle('hidden', c.status==='cancelled');
+  show('locked');
+}
+async function payNow(){
+  try { const r = await API.billing({ action:'pay_now' });
+    if (r.checkoutUrl) return location.href = r.checkoutUrl;
+    alert('Der offene Betrag wird per Lastschrift eingezogen. Sie werden freigeschaltet, sobald die Zahlung bestätigt ist.'); boot(); }
+  catch(e){ $('lk-err').textContent = msg(e); }
+}
+$('lk-pay').onclick = payNow;
+$('lk-card').onclick = async () => { try { const r = await API.billing({ action:'pay_now', method:'checkout' }); if (r.checkoutUrl) location.href = r.checkoutUrl; } catch(e){ $('lk-err').textContent = msg(e); } };
+$('lk-logout').onclick = async () => { await API.logout(); sessionStorage.clear(); show('login'); };
+
+/* ======================= App starten (Echtbetrieb) ======================= */
+const b64e = s => btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const b64d = s => decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/'))));
+const Q = { kv: new Map(), files: new Map(), timer: null, busy: false };
+const raw = { get: k => Storage.prototype.getItem.call(localStorage, k), set: (k,v) => Storage.prototype.setItem.call(localStorage, k, v), rem: k => Storage.prototype.removeItem.call(localStorage, k) };
+
+async function launch(vid){
+  const veh = ST.vehicles.find(v => v.id === vid); if (!veh) return startVehicles();
+  sessionStorage.setItem('cp_vehicle', vid);
+  if (DEMO){ $('da-title').textContent = veh.label; return show('demoapp'); }
+  show('loading'); $('loadMsg').textContent = 'Lade ' + veh.label + '…';
+  try {
+    const html = await API.appCode();                       // nur mit aktivem Abo
+    const P = 'cp:' + vid + ':';
+    // 1) Eingaben vom Server holen (Server ist maßgeblich)
+    $('loadMsg').textContent = 'Lade Daten von ' + veh.label + '…';
+    const rows = await API.kvLoad(vid);
+    const keep = new Set(rows.map(r => P + r.key));
+    for (let i = localStorage.length - 1; i >= 0; i--){ const k = localStorage.key(i); if (k && k.startsWith(P) && !keep.has(k)) raw.rem(k); }
+    rows.forEach(r => raw.set(P + r.key, r.value ?? ''));
+    // 2) Dateien (Belege) abgleichen
+    await restoreFiles(vid, P);
+    // 3) Verbindung für die App bereitstellen und starten
+    window.CP = makeBridge(vid);
+    const f = document.createElement('iframe'); f.id = 'appFrame'; f.setAttribute('allow', 'camera; clipboard-write');
+    f.srcdoc = html; document.body.appendChild(f);
+    $('shell').classList.add('hidden');
+    const chip = document.createElement('button'); chip.id = 'appChip'; chip.textContent = '🚕 ' + veh.label + ' ▾';
+    if (ST.company.status === 'past_due') { chip.classList.add('warn'); chip.textContent = '⚠ Zahlung offen · ' + veh.label; }
+    chip.onclick = () => { window.CP.flush(); location.href = location.pathname + '?wechseln=1'; };
+    document.body.appendChild(chip);
+    const dot = document.createElement('div'); dot.id = 'syncDot'; dot.textContent = '● gesichert'; document.body.appendChild(dot);
+    setInterval(checkStillAllowed, 10 * 60 * 1000);
+  } catch(e){
+    console.error(e);
+    if (/locked/.test(e.message)) { await refresh(); return startLocked(); }
+    if (/device_not_allowed/.test(e.message)) { sessionStorage.clear(); await API.logout(); return show('login'); }
+    $('loadMsg').textContent = 'Cockpit Plus konnte nicht geladen werden. Bitte Verbindung prüfen.';
+  }
+}
+
+async function restoreFiles(vid, P){
+  const names = await API.fileList(vid);
+  if (!names.length) return;
+  const dbs = {};
+  for (const n of names){ const [db, store] = b64d(n).split('|'); (dbs[db] ||= new Set()).add(store); }
+  for (const db in dbs){
+    const conn = await new Promise((res, rej) => { const r = IDBFactory.prototype.open.call(indexedDB, P + db, 1);
+      r.onupgradeneeded = () => dbs[db].forEach(s => { if (!r.result.objectStoreNames.contains(s)) r.result.createObjectStore(s); });
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+    const missing = [];
+    for (const n of names){ const [d, s, key] = b64d(n).split('|'); if (d !== db || !conn.objectStoreNames.contains(s)) continue;
+      const has = await new Promise(res => { const t = conn.transaction(s).objectStore(s).count(key); t.onsuccess = () => res(t.result > 0); t.onerror = () => res(false); });
+      if (!has) missing.push([n, s, key]); }
+    let i = 0;
+    for (const [n, s, key] of missing){
+      $('loadMsg').textContent = 'Lade Belege ' + (++i) + '/' + missing.length + '…';
+      const text = await API.fileGet(vid, n);
+      await new Promise(res => { const t = conn.transaction(s, 'readwrite'); t.objectStore(s).put(text, key); t.oncomplete = res; t.onerror = res; });
+    }
+    conn.close();
+  }
+}
+
+function makeBridge(vid){
+  const fileName = (db, store, key) => b64e([db, store, key].join('|'));
+  const schedule = () => { clearTimeout(Q.timer); Q.timer = setTimeout(flush, 1500); setDot('● speichere…'); };
+  const setDot = t => { const d = $('syncDot'); if (d) d.textContent = t; };
+  async function flush(){
+    if (Q.busy){ schedule(); return; }
+    Q.busy = true;
+    try {
+      const kv = [...Q.kv.entries()]; Q.kv.clear();
+      const up = kv.filter(([,v]) => v !== null).map(([key, value]) => ({ key, value }));
+      const del = kv.filter(([,v]) => v === null).map(([k]) => k);
+      if (up.length) await API.kvUpsert(vid, up);
+      if (del.length) await API.kvDelete(vid, del);
+      const files = [...Q.files.entries()]; Q.files.clear();
+      for (const [name, val] of files){ if (val === null) await API.fileDel(vid, name); else await API.filePut(vid, name, val); }
+      setDot('● gesichert');
+    } catch(e){
+      console.error('Sicherung fehlgeschlagen', e); setDot('● offline – wird nachgeholt');
+      if (/row-level security|JWT|401|403/.test(String(e.message))) checkStillAllowed();
+      setTimeout(flush, 15000);
+    } finally { Q.busy = false; }
+  }
+  return {
+    vehicleId: vid,
+    kvSet(k, v){ Q.kv.set(k, v); schedule(); },
+    kvDel(k){ Q.kv.set(k, null); schedule(); },
+    fileSet(db, store, key, val){ if (typeof val !== 'string') { try { val = JSON.stringify(val); } catch(_) { return; } } Q.files.set(fileName(db, store, key), val); schedule(); },
+    fileDel(db, store, key){ Q.files.set(fileName(db, store, key), null); schedule(); },
+    flush,
+  };
+}
+
+async function checkStillAllowed(){
+  try { await refresh(); if (!ST.can_use){ document.getElementById('appFrame')?.remove(); document.getElementById('appChip')?.remove(); $('shell').classList.remove('hidden'); startLocked(); } } catch(_){}
+}
+window.addEventListener('pagehide', () => { try { window.CP && window.CP.flush(); } catch(_){} });
+
+/* Demo-Hilfen: in der Adresse ?demo=1&zustand=gesperrt bzw. =offen */
+if (DEMO){
+  const z = (location.search.match(/zustand=(\w+)/) || [])[1];
+  if (z) API.login('demo@cockpitplus.de','x').then(() => { if (z==='gesperrt') API._lock(); if (z==='offen') API._pastDue(); sessionStorage.setItem('cp_unlocked', deviceKey()); }).then(boot);
+  else boot();
+} else boot();
+})();
+</script>
+</body>
+</html>

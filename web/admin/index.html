@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#000000">
+<title>Cockpit Plus – Admin</title>
+<script src="/config.js"></script>
+<style>
+  :root{--bg:#000;--fg:#fff;--accent:#ffd400;--muted:#9aa0a6;--surface:#0b0b0b;--line:#222;--ok:#30a46c;--warn:#ffb224;--bad:#e5484d;--r:14px}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--fg);font-family:Arial,Helvetica,sans-serif;-webkit-text-size-adjust:100%}
+  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 40px}
+  header{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+  header b{color:var(--accent);font-size:19px;letter-spacing:.5px} header .tag{font-size:11px;border:1px solid #5c4b00;color:var(--accent);padding:2px 8px;border-radius:999px}
+  header .sp{flex:1} header button{background:none;border:1px solid #333;color:#ddd;border-radius:10px;padding:8px 12px;font-size:13px}
+  .demo{display:none;background:#1c1600;border:1px solid #5c4b00;color:var(--accent);font-size:12px;padding:8px 10px;border-radius:10px;margin-bottom:14px}
+  .box{max-width:400px;margin:40px auto}
+  h1{font-size:21px;margin:0 0 8px} p{line-height:1.45} .muted{color:var(--muted);font-size:13px}
+  label{display:block;font-size:13px;color:#ccc;margin:12px 0 6px}
+  input,select{width:100%;height:44px;border-radius:10px;border:1px solid #333;background:#0a0a0a;color:#fff;padding:0 12px;font-size:16px}
+  .btn{display:inline-block;height:44px;border:0;border-radius:11px;background:var(--accent);color:#000;font-weight:800;font-size:15px;padding:0 16px;cursor:pointer}
+  .btn.full{width:100%;margin-top:16px} .btn.sec{background:#1d1d1d;color:#fff;border:1px solid #333} .btn.bad{background:#2a0c0d;color:#ffb1b4;border:1px solid #5a1a1d}
+  .btn.sm{height:34px;font-size:13px;padding:0 12px}
+  .err{color:#ff8a8f;font-size:14px;margin-top:10px;min-height:18px}
+  .hidden{display:none!important}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+  .kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+  .kpi span{display:block;color:var(--muted);font-size:12px;margin-bottom:6px} .kpi b{font-size:24px} .kpi small{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+  .kpi.hi b{color:var(--accent)}
+  .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+  .chip{border:1px solid #333;background:#0b0b0b;color:#ddd;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
+  .chip.on{border-color:var(--accent);color:var(--accent)}
+  .chip i{font-style:normal;color:var(--muted);margin-left:4px}
+  .bar input{flex:1;min-width:200px;height:38px;font-size:14px}
+  .list{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+  .item{display:grid;grid-template-columns:18px 1.6fr .7fr .9fr 1.1fr 24px;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid #161616;cursor:pointer;font-size:14px}
+  .item:hover{background:#101010} .item:last-child{border-bottom:0}
+  .item .n b{display:block} .item .n span{color:var(--muted);font-size:12px}
+  .item .r{text-align:right} .item .go{color:var(--accent)}
+  .head{cursor:default;color:var(--muted);font-size:12px;background:#080808} .head:hover{background:#080808}
+  .dot{width:12px;height:12px;border-radius:50%} .dot.ok{background:var(--ok)} .dot.warn{background:var(--warn)} .dot.bad{background:var(--bad)} .dot.none{background:#555}
+  .pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700}
+  .pill.ok{background:#0f2a1c;color:#7ee2a8} .pill.warn{background:#2a1d00;color:#ffd27a} .pill.bad{background:#2a0c0d;color:#ffb1b4} .pill.none{background:#1d1d1d;color:#bbb}
+  .sheet{position:fixed;inset:0;background:#000b;z-index:10;display:flex;justify-content:flex-end}
+  .sheet .pane{width:min(560px,100%);height:100%;overflow:auto;background:#060606;border-left:1px solid #222;padding:18px 18px 40px}
+  .sec{margin-top:18px} .sec h3{font-size:14px;color:var(--muted);margin:0 0 8px;text-transform:uppercase;letter-spacing:.6px}
+  table{width:100%;border-collapse:collapse;font-size:13px} td{padding:8px 4px;border-bottom:1px solid #161616;vertical-align:top} td.r{text-align:right}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .qr{background:#fff;border-radius:12px;padding:10px;width:200px;margin:12px 0}
+  .qr img{width:100%;display:block}
+  code{background:#111;padding:2px 6px;border-radius:6px;font-size:12px;word-break:break-all}
+  @media (max-width:760px){
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .item{grid-template-columns:14px 1fr auto;row-gap:2px}
+    .item .c3,.item .c4{display:none} .item .go{display:none}
+    .head{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><b>COCKPIT PLUS</b><span class="tag">ADMIN</span><span class="sp"></span><button id="logout" class="hidden">Abmelden</button></header>
+  <div class="demo" id="demoNote">DEMO-Modus – erfundene Beispieldaten. Im Echtbetrieb kommen hier eure echten Mitglieder und Zahlungen an.</div>
+
+  <!-- Anmelden -->
+  <div class="box" id="v-login">
+    <h1>Admin-Anmeldung</h1>
+    <p class="muted">Nur für die Inhaber. Zugang mit Passwort und Code aus der Authenticator-App.</p>
+    <label>E-Mail</label><input id="em" type="email" autocomplete="username">
+    <label>Passwort</label><input id="pw" type="password" autocomplete="current-password">
+    <div class="err" id="li-err"></div>
+    <button class="btn full" id="li-btn">Weiter</button>
+  </div>
+
+  <!-- Zwei-Faktor einrichten -->
+  <div class="box hidden" id="v-enroll">
+    <h1>Zwei-Faktor einrichten</h1>
+    <p>Einmalig: Scanne den Code mit einer Authenticator-App (z. B. Google Authenticator, Microsoft Authenticator) und gib den 6-stelligen Code ein.</p>
+    <div class="qr"><img id="qr" alt="QR-Code"></div>
+    <p class="muted">Oder manuell: <code id="secret"></code></p>
+    <label>6-stelliger Code</label><input id="en-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+    <div class="err" id="en-err"></div>
+    <button class="btn full" id="en-btn">Bestätigen</button>
+  </div>
+
+  <!-- Zwei-Faktor prüfen -->
+  <div class="box hidden" id="v-mfa">
+    <h1>Code eingeben</h1>
+    <p class="muted">6-stelliger Code aus deiner Authenticator-App.</p>
+    <input id="mfa-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" style="font-size:24px;letter-spacing:6px;text-align:center">
+    <div class="err" id="mfa-err"></div>
+    <button class="btn full" id="mfa-btn">Anmelden</button>
+  </div>
+
+  <!-- Übersicht -->
+  <div class="hidden" id="v-dash">
+    <div class="kpis" id="kpis"></div>
+    <div class="bar" id="filters"></div>
+    <div class="bar"><input id="q" placeholder="Suchen: Firma, Name, E-Mail, Ort…"><button class="btn sec sm" id="reload">Aktualisieren</button><button class="btn sec sm" id="csv">Liste als CSV</button></div>
+    <div class="list" id="list"></div>
+    <p class="muted" style="margin-top:12px">Ampel: <span class="pill ok">bezahlt</span> <span class="pill warn">Zahlung offen / Frist läuft</span> <span class="pill bad">gesperrt</span> <span class="pill none">Zahlung nicht eingerichtet / gekündigt</span>. Status und Sperren laufen automatisch über Mollie – hier könnt ihr bei Bedarf eingreifen.</p>
+  </div>
+</div>
+
+<div class="sheet hidden" id="sheet"><div class="pane" id="pane"></div></div>
+
+<script>
+(function(){
+const CFG = window.CP_CONFIG || {};
+const DEMO = !CFG.SUPABASE_URL || /[?&]demo=1/.test(location.search);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const euro = n => (Math.round((+n||0)*100)/100).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
+const d = x => x ? new Date(x).toLocaleDateString('de-DE') : '–';
+const dt = x => x ? new Date(x).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'}) : '–';
+const VIEWS = ['login','enroll','mfa','dash'];
+const show = v => { VIEWS.forEach(x => $('v-'+x).classList.toggle('hidden', x!==v)); $('logout').classList.toggle('hidden', v==='login'); };
+const AMPEL = { active:['ok','bezahlt'], past_due:['warn','Zahlung offen'], locked:['bad','gesperrt'], pending:['none','ohne Zahlung'], cancelled:['none','gekündigt'] };
+const PAY = { paid:['ok','bezahlt'], settled:['ok','ausgeglichen'], pending:['warn','in Bearbeitung'], open:['warn','offen'], failed:['bad','fehlgeschlagen'], expired:['bad','abgelaufen'], canceled:['bad','abgebrochen'], charged_back:['bad','Rücklastschrift'] };
+
+/* ============================ Server ============================ */
+let API;
+if (!DEMO){
+  API = (function(){
+    let sb; const ready = import('https://esm.sh/@supabase/supabase-js@2.45.4').then(m => { sb = m.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY, { auth: { storageKey: 'cp-admin-auth' } }); });
+    const rpc = async (n, a) => { await ready; const { data, error } = await sb.rpc(n, a); if (error) throw error; return data; };
+    return {
+      async login(e, p){ await ready; const { error } = await sb.auth.signInWithPassword({ email: e, password: p }); if (error) throw error; },
+      async logout(){ await ready; await sb.auth.signOut(); },
+      async session(){ await ready; return (await sb.auth.getSession()).data.session; },
+      async mfaState(){ await ready; const { data } = await sb.auth.mfa.getAuthenticatorAssuranceLevel(); const f = await sb.auth.mfa.listFactors();
+        return { level: data.currentLevel, factors: (f.data?.totp || []).filter(x => x.status === 'verified') }; },
+      async enroll(){ await ready; const f = await sb.auth.mfa.listFactors(); for (const x of (f.data?.all || [])) if (x.status !== 'verified') await sb.auth.mfa.unenroll({ factorId: x.id });
+        const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Cockpit Plus Admin' }); if (error) throw error; return data; },
+      async verify(factorId, code){ await ready; const { error } = await sb.auth.mfa.challengeAndVerify({ factorId, code }); if (error) throw error; },
+      overview: () => rpc('admin_overview'),
+      detail: id => rpc('admin_company_detail', { p_company: id }),
+      async act(body){ await ready; const { data, error } = await sb.functions.invoke('admin', { body }); if (error) throw error; if (data?.error) throw new Error(data.error); return data; },
+    };
+  })();
+} else {
+  $('demoNote').style.display = 'block';
+  const names = [['Taxi Yilmaz','Mehmet Yilmaz','Berlin',3,'active'],['City Car GmbH','Anna Schulz','Hamburg',12,'active'],['Taxi Becker','Jens Becker','Köln',1,'past_due'],
+    ['Funk-Taxi Weber','Petra Weber','München',5,'active'],['Taxi Demir','Ali Demir','Berlin',2,'locked'],['Airport Shuttle KG','Tom Krüger','Frankfurt',8,'active'],
+    ['Taxi Hoffmann','Uwe Hoffmann','Dortmund',1,'pending'],['Taxi Özdemir','Kemal Özdemir','Essen',4,'active'],['Stadt-Taxi Lang','Sven Lang','Leipzig',2,'past_due'],
+    ['Taxi Nowak','Piotr Nowak','Bremen',1,'cancelled'],['Taxi Arslan','Hasan Arslan','Berlin',6,'active'],['Taxi Fischer','Claudia Fischer','Stuttgart',2,'active']];
+  const now = Date.now(), day = 864e5;
+  const C = names.map((n,i) => ({ id:'c'+i, company_name:n[0], contact_name:n[1], city:n[2], vehicles:n[3], status:n[4], email:n[1].toLowerCase().replace(/\s/,'.').replace(/[äöü]/g, m => ({ä:'ae',ö:'oe',ü:'ue'}[m]))+'@example.de',
+    phone:'0170 '+(1000000+i*7919), created_at:new Date(now-(i*17+5)*day).toISOString(), next_charge_on:new Date(now+((i*7)%28+1)*day).toISOString(),
+    grace_until: n[4]==='past_due' ? new Date(now+(i%9+2)*day).toISOString() : null, locked_reason: n[4]==='locked' ? 'Zahlung nicht eingegangen' : null,
+    devices: n[4]==='pending'?0:1+(i%3),
+    last_payment: n[4]==='pending' ? null : { amount: n[3]*7, status: n[4]==='active'?'paid':(n[4]==='cancelled'?'paid':'failed'), at:new Date(now-((i*5)%25+2)*day).toISOString() } }));
+  const kpi = () => { const live = C.filter(c => ['active','past_due'].includes(c.status)); return {
+    companies_total: C.filter(c => c.status!=='cancelled').length, companies_active: C.filter(c => c.status==='active').length,
+    companies_past_due: C.filter(c => c.status==='past_due').length, companies_locked: C.filter(c => c.status==='locked').length,
+    companies_pending: C.filter(c => c.status==='pending').length, vehicles_active: live.reduce((a,c) => a+c.vehicles, 0),
+    mrr: live.reduce((a,c) => a+c.vehicles*7, 0), paid_this_month: C.filter(c => c.last_payment?.status==='paid').reduce((a,c) => a+c.last_payment.amount, 0), new_this_month: 3 }; };
+  const log = {};
+  API = {
+    async login(e,p){ if (!e||!p) throw new Error('Bitte E-Mail und Passwort eingeben.'); sessionStorage.setItem('cpa_demo','1'); },
+    async logout(){ sessionStorage.removeItem('cpa_demo'); sessionStorage.removeItem('cpa_mfa'); },
+    async session(){ return sessionStorage.getItem('cpa_demo') ? {} : null; },
+    async mfaState(){ return { level: sessionStorage.getItem('cpa_mfa') ? 'aal2' : 'aal1', factors: [{ id:'f1' }] }; },
+    async verify(f, code){ if (!/^\d{6}$/.test(code)) throw new Error('Code ungültig'); sessionStorage.setItem('cpa_mfa','1'); },
+    async overview(){ return { kpi: kpi(), companies: C }; },
+    async detail(id){ const c = C.find(x => x.id===id);
+      const veh = Array.from({length:c.vehicles}, (_,i) => ({ id:id+'v'+i, label:'Taxi '+(1000+i*37), kennzeichen:'B-TX '+(1000+i*37), konzession:'K-'+(2000+i), active:true, created_at:c.created_at }));
+      const pays = c.status==='pending' ? [] : Array.from({length:4}, (_,i) => ({ amount:c.vehicles*7, status: i===0 && c.last_payment ? c.last_payment.status : 'paid', kind:'recurring', description:'Cockpit Plus – '+c.vehicles+' Fahrzeug(e)', created_at:new Date(now-(i*30+3)*day).toISOString(), paid_at:new Date(now-(i*30+1)*day).toISOString() }));
+      const devs = Array.from({length:c.devices}, (_,i) => ({ id:id+'d'+i, device_name:['Android','iPhone','Windows-PC'][i%3], created_at:c.created_at, last_seen_at:new Date(now-i*day*2).toISOString(), revoked:false }));
+      return { company: { ...c, street:'Musterstraße '+(id.length+3), zip:'10115' }, vehicles: veh, payments: pays, devices: devs,
+        agb: c.status==='pending'&&false ? [] : [{ agb_version:'1.0', accepted_at:c.created_at, ip:'84.12.34.'+(id.length*7), user_agent:'Mozilla/5.0 (Linux; Android 14)' }], audit: log[id] || [] }; },
+    async act(b){ const c = C.find(x => x.id===b.company_id); (log[b.company_id] ||= []).unshift({ action:b.action, created_at:new Date().toISOString(), details:{} });
+      if (b.action==='lock'){ c.status='locked'; c.locked_reason=b.reason; } if (b.action==='unlock'){ c.status='active'; c.grace_until=null; c.locked_reason=null; }
+      if (b.action==='reset_devices') c.devices=0; return { ok:true }; },
+  };
+}
+
+/* ============================ Ablauf ============================ */
+async function boot(){
+  try {
+    const s = await API.session(); if (!s) return show('login');
+    const m = await API.mfaState();
+    if (m.level === 'aal2') return loadDash();
+    if (!m.factors.length) return startEnroll();
+    window._factor = m.factors[0].id; show('mfa'); $('mfa-code').focus();
+  } catch(e){ console.error(e); show('login'); }
+}
+$('li-btn').onclick = async () => { $('li-err').textContent=''; try { await API.login($('em').value.trim(), $('pw').value); await boot(); } catch(e){ $('li-err').textContent = /Invalid/.test(e.message)?'E-Mail oder Passwort falsch.':e.message; } };
+$('pw').onkeydown = e => { if (e.key==='Enter') $('li-btn').click(); };
+async function startEnroll(){ const f = await API.enroll(); window._factor = f.id; $('qr').src = f.totp.qr_code; $('secret').textContent = f.totp.secret; show('enroll'); }
+$('en-btn').onclick = async () => { try { await API.verify(window._factor, $('en-code').value.trim()); loadDash(); } catch(e){ $('en-err').textContent = 'Code falsch – bitte erneut.'; } };
+$('mfa-btn').onclick = async () => { try { await API.verify(window._factor, $('mfa-code').value.trim()); loadDash(); } catch(e){ $('mfa-err').textContent = 'Code falsch – bitte erneut.'; } };
+$('mfa-code').onkeydown = e => { if (e.key==='Enter') $('mfa-btn').click(); };
+$('logout').onclick = async () => { await API.logout(); location.reload(); };
+
+let DATA = null, FILTER = 'all';
+async function loadDash(){
+  show('dash');
+  try { DATA = await API.overview(); } catch(e){
+    if (/forbidden/.test(e.message)) { alert('Dieses Konto ist kein Admin.'); await API.logout(); return location.reload(); }
+    if (/mfa_required/.test(e.message)) return boot();
+    throw e; }
+  const k = DATA.kpi;
+  $('kpis').innerHTML = `
+    <div class="kpi hi"><span>Monatlicher Umsatz (Abo)</span><b>${euro(k.mrr)}</b><small>${k.vehicles_active} aktive Fahrzeuge</small></div>
+    <div class="kpi"><span>Mitglieder</span><b>${k.companies_total}</b><small>${k.new_this_month} neu diesen Monat</small></div>
+    <div class="kpi"><span>Eingegangen diesen Monat</span><b>${euro(k.paid_this_month)}</b><small>bestätigte Zahlungen</small></div>
+    <div class="kpi"><span>Probleme</span><b style="color:${(k.companies_past_due+k.companies_locked)?'var(--warn)':'#fff'}">${k.companies_past_due + k.companies_locked}</b><small>${k.companies_past_due} offen · ${k.companies_locked} gesperrt</small></div>`;
+  const cnt = s => DATA.companies.filter(c => s==='all' || c.status===s).length;
+  $('filters').innerHTML = [['all','Alle'],['active','Bezahlt'],['past_due','Zahlung offen'],['locked','Gesperrt'],['pending','Ohne Zahlung'],['cancelled','Gekündigt']]
+    .map(([v,l]) => `<button class="chip ${FILTER===v?'on':''}" data-f="${v}">${l}<i>${cnt(v)}</i></button>`).join('');
+  document.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { FILTER = b.dataset.f; loadDash(); });
+  renderList();
+}
+function renderList(){
+  const q = $('q').value.trim().toLowerCase();
+  const rows = DATA.companies.filter(c => (FILTER==='all' || c.status===FILTER) &&
+    (!q || [c.company_name, c.contact_name, c.email, c.city, c.phone].join(' ').toLowerCase().includes(q)));
+  $('list').innerHTML = `<div class="item head"><span></span><span>Unternehmen</span><span class="r">Fahrzeuge</span><span class="r c3">Monatlich</span><span class="c4">Letzte Zahlung</span><span></span></div>` +
+    (rows.map(c => { const a = AMPEL[c.status] || ['none', c.status]; const lp = c.last_payment; const ps = lp ? (PAY[lp.status]||['none',lp.status]) : null;
+      const extra = c.status==='past_due' && c.grace_until ? ' · Sperre am ' + d(c.grace_until) : '';
+      return `<div class="item" data-id="${esc(c.id)}"><span class="dot ${a[0]}" title="${a[1]}"></span>
+        <span class="n"><b>${esc(c.company_name)}</b><span>${esc(c.contact_name)} · ${esc(c.city||'')} · <span class="pill ${a[0]}" style="padding:1px 7px">${a[1]}</span>${esc(extra)}</span></span>
+        <span class="r"><b>${c.vehicles}</b></span><span class="r c3">${euro(c.vehicles*7)}</span>
+        <span class="c4">${lp ? `${d(lp.at)} · <span class="pill ${ps[0]}">${ps[1]}</span>` : '<span class="muted">–</span>'}</span><span class="go">›</span></div>`; }).join('')
+     || '<div class="item"><span></span><span class="muted">Keine Einträge.</span></div>');
+  document.querySelectorAll('.item[data-id]').forEach(el => el.onclick = () => openDetail(el.dataset.id));
+}
+$('q').oninput = renderList;
+$('reload').onclick = loadDash;
+$('csv').onclick = () => {
+  const head = ['Firma','Ansprechpartner','E-Mail','Telefon','Ort','Status','Fahrzeuge','Monatlich','Kunde seit','Nächste Abbuchung'];
+  const lines = DATA.companies.map(c => [c.company_name,c.contact_name,c.email,c.phone,c.city,(AMPEL[c.status]||[])[1]||c.status,c.vehicles,(c.vehicles*7).toFixed(2).replace('.',','),d(c.created_at),d(c.next_charge_on)]
+    .map(x => '"' + String(x??'').replace(/"/g,'""') + '"').join(';'));
+  const blob = new Blob(['﻿' + [head.join(';'), ...lines].join('\r\n')], { type:'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'CockpitPlus_Mitglieder_' + new Date().toISOString().slice(0,10) + '.csv'; a.click();
+};
+
+async function openDetail(id){
+  $('sheet').classList.remove('hidden'); $('pane').innerHTML = '<p class="muted">Lade…</p>';
+  const x = await API.detail(id), c = x.company, a = AMPEL[c.status] || ['none', c.status];
+  const nV = x.vehicles.filter(v => v.active).length;
+  $('pane').innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px"><span class="dot ${a[0]}"></span><h1 style="margin:0;flex:1">${esc(c.company_name)}</h1><button class="btn sec sm" id="close">Schließen</button></div>
+    <p><span class="pill ${a[0]}">${a[1]}</span> ${c.locked_reason ? '<span class="muted">· ' + esc(c.locked_reason) + '</span>' : ''} ${c.grace_until && c.status==='past_due' ? '<span class="muted">· automatische Sperre am ' + d(c.grace_until) + '</span>' : ''}</p>
+    <div class="sec"><h3>Kontakt</h3><table>
+      <tr><td>Ansprechpartner</td><td class="r">${esc(c.contact_name)}</td></tr><tr><td>E-Mail</td><td class="r">${esc(c.email)}</td></tr>
+      <tr><td>Telefon</td><td class="r">${esc(c.phone||'–')}</td></tr><tr><td>Adresse</td><td class="r">${esc([c.street, [c.zip, c.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')||'–')}</td></tr>
+      <tr><td>Kunde seit</td><td class="r">${d(c.created_at)}</td></tr><tr><td>Nächste Abbuchung</td><td class="r">${c.cancel_at ? 'gekündigt zum ' + d(c.cancel_at) : d(c.next_charge_on)}</td></tr>
+      <tr><td>Monatlich</td><td class="r"><b>${euro(nV*7)}</b> (${nV} Fahrzeug${nV===1?'':'e'})</td></tr></table></div>
+    <div class="actions">
+      ${c.status==='locked' ? '<button class="btn sm" data-a="unlock">Freischalten</button>' : '<button class="btn bad sm" data-a="lock">Sperren</button>'}
+      <button class="btn sec sm" data-a="reset_devices">Alle Geräte abmelden / PIN zurücksetzen</button>
+    </div>
+    <div class="sec"><h3>Fahrzeuge</h3><table>${x.vehicles.map(v => `<tr><td><b>${esc(v.label)}</b><br><span class="muted">${esc([v.kennzeichen, v.konzession && 'Konz. ' + v.konzession].filter(Boolean).join(' · '))}</span></td><td class="r">${v.active ? '<span class="pill ok">aktiv</span>' : '<span class="pill none">abbestellt ' + d(v.removed_at) + '</span>'}</td></tr>`).join('') || '<tr><td class="muted">keine</td></tr>'}</table></div>
+    <div class="sec"><h3>Zahlungen</h3><table>${x.payments.map(p => { const s = PAY[p.status] || ['none', p.status]; return `<tr><td>${d(p.paid_at || p.created_at)}<br><span class="muted">${esc(p.description||p.kind)}</span></td><td class="r">${euro(p.amount)}<br><span class="pill ${s[0]}">${s[1]}</span></td></tr>`; }).join('') || '<tr><td class="muted">noch keine</td></tr>'}</table></div>
+    <div class="sec"><h3>Geräte</h3><table>${x.devices.map(v => `<tr><td>${esc(v.device_name||'Gerät')}<br><span class="muted">angemeldet ${d(v.created_at)} · zuletzt ${dt(v.last_seen_at)}</span></td><td class="r">${v.revoked ? '<span class="pill bad">abgemeldet</span>' : '<span class="pill ok">aktiv</span>'}</td></tr>`).join('') || '<tr><td class="muted">keine</td></tr>'}</table></div>
+    <div class="sec"><h3>AGB-Zustimmung</h3><table>${x.agb.map(g => `<tr><td>Version ${esc(g.agb_version)}<br><span class="muted">${esc((g.user_agent||'').slice(0,60))}</span></td><td class="r">${dt(g.accepted_at)}<br><span class="muted">IP ${esc(g.ip||'–')}</span></td></tr>`).join('') || '<tr><td class="muted">keine</td></tr>'}</table></div>
+    <div class="sec"><h3>Verlauf (Admin & Automatik)</h3><table>${x.audit.map(l => `<tr><td>${esc(l.action)}</td><td class="r">${dt(l.created_at)}</td></tr>`).join('') || '<tr><td class="muted">keine Einträge</td></tr>'}</table></div>
+    <p class="muted" style="margin-top:18px">Datenschutz: Kassenbuch-, Fahrtenbuch- und Schichtdaten der Kunden sind hier bewusst nicht einsehbar.</p>`;
+  $('close').onclick = () => $('sheet').classList.add('hidden');
+  document.querySelectorAll('[data-a]').forEach(b => b.onclick = async () => {
+    const act = b.dataset.a; let reason;
+    if (act==='lock'){ reason = prompt('Grund der Sperre (sieht der Kunde):', 'Durch Admin gesperrt'); if (reason===null) return; }
+    if (act==='unlock' && !confirm('Konto freischalten?')) return;
+    if (act==='reset_devices' && !confirm('Alle Geräte dieses Kunden abmelden? Er muss sich danach neu anmelden und eine neue PIN festlegen.')) return;
+    try { await API.act({ action: act, company_id: id, reason }); await loadDash(); openDetail(id); } catch(e){ alert('Fehler: ' + e.message); }
+  });
+}
+$('sheet').onclick = e => { if (e.target.id==='sheet') $('sheet').classList.add('hidden'); };
+boot();
+})();
+</script>
+</body>
+</html>
