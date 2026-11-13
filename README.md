@@ -108,7 +108,11 @@ Dann `app/cockpit.html` in Supabase Storage (Bucket `app`) ersetzen. Kunden beko
 - [ ] Sicherheits-Check durch IT-Freelancer
 - [ ] Bestehende Kunden: Daten aus der alten Version per „Sicherung“ (ZIP) exportieren und in der neuen Version pro Fahrzeug wiederherstellen
 
-## Demo ansehen
-Solange `web/config.js` leer ist, laufen Kundenseite und Admin-Bereich im **Demo-Modus** mit Beispieldaten.
-- Kundenseite: `/` (beliebige E-Mail/Passwort) · gesperrt: `/?zustand=gesperrt` · Zahlung offen: `/?zustand=offen`
-- Admin: `/admin/` (beliebige Daten, Code: 6 beliebige Ziffern)
+## Als Web-App installieren
+- **Kundenbereich:** `https://<eure-seite>/` im Handy-Browser öffnen → „Zum Startbildschirm hinzufügen“ (Android: „App installieren“). Icon: Cockpit +.
+- **Admin-Bereich:** `https://<eure-seite>/admin/` öffnen → ebenfalls installieren. Eigenes Icon „Cockpit + ADMIN“, eigene App.
+- Solange `web/config.js` nicht ausgefüllt ist, zeigen beide Seiten „Server noch nicht verbunden“.
+
+### Netlify mit diesem Branch verbinden
+Netlify → **Add new site → Import from Git → GitHub → OKS-System** → Branch **`abo-verfahren`** → Publish directory `web` → Deploy.
+(Die bisherige Seite aus `main` bleibt davon unberührt.)
