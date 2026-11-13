@@ -698,7 +698,9 @@ window.addEventListener('pagehide', () => { try { window.CP && window.CP.flush()
 
 /* Demo-Hilfen: in der Adresse ?demo=1&zustand=gesperrt bzw. =offen */
 if (DEMO){
-  const z = (location.search.match(/zustand=(\w+)/) || [])[1];
+  $('demoNote').innerHTML += '<br>Ansicht testen: <a href="#normal" style="color:#fff">normal</a> · <a href="#offen" style="color:#fff">Zahlung offen</a> · <a href="#gesperrt" style="color:#fff">gesperrt</a> · <a href="#neu" style="color:#fff">neu registrieren</a>';
+  window.addEventListener('hashchange', () => { try { sessionStorage.clear(); } catch(_){} location.reload(); });
+  const z = ((location.search + location.hash).match(/(?:zustand=|#)(gesperrt|offen|normal)/) || [])[1];
   if (z) API.login('demo@cockpitplus.de','x').then(() => { if (z==='gesperrt') API._lock(); if (z==='offen') API._pastDue(); sessionStorage.setItem('cp_unlocked', deviceKey()); }).then(boot);
   else boot();
 } else boot();
