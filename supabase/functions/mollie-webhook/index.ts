@@ -30,7 +30,8 @@ Deno.serve(async (req) => {
     if (status === "paid") {
       // Erste Zahlung über Bezahlseite -> Mandat merken und Abo starten
       if (p.sequenceType === "first" && p.mandateId) {
-        const patch: Record<string, unknown> = { mollie_mandate_id: p.mandateId };
+        const methods: Record<string, string> = { creditcard: "Kreditkarte", paypal: "PayPal", directdebit: "SEPA-Lastschrift", banktransfer: "Überweisung" };
+        const patch: Record<string, unknown> = { mollie_mandate_id: p.mandateId, payment_method: methods[p.method] ?? p.method ?? null };
         if (!company.mollie_subscription_id && p.metadata?.kind === "first_checkout") {
           const { count } = await admin.from("vehicles").select("id", { count: "exact", head: true })
             .eq("company_id", company.id).eq("active", true);

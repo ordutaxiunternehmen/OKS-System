@@ -62,6 +62,7 @@ create table if not exists public.companies (
   max_devices            int,               -- null = Standard aus settings
   mollie_customer_id     text unique,
   mollie_mandate_id      text,
+  payment_method         text,              -- z. B. SEPA-Lastschrift, Kreditkarte, PayPal
   mollie_subscription_id text,
   next_charge_on         date,
   cancel_at              date,              -- Kündigung wirksam zum
@@ -70,6 +71,8 @@ create table if not exists public.companies (
 );
 
 -- Darf dieses Konto die App gerade benutzen?
+alter table public.companies add column if not exists payment_method text;
+
 create or replace function public.company_can_use(c public.companies) returns boolean
 language sql stable as $$
   select c.status = 'active'
@@ -412,13 +415,24 @@ begin
               where v.active and c.status in ('active','past_due')),
       'paid_this_month', (select coalesce(sum(amount),0) from payments
                           where status='paid' and paid_at >= date_trunc('month', now())),
-      'new_this_month', (select count(*) from companies where created_at >= date_trunc('month', now()))
+      'new_this_month', (select count(*) from companies where created_at >= date_trunc('month', now())),
+      'cancelled_this_month', (select count(*) from companies where cancel_at is not null and updated_at >= date_trunc('month', now())),
+      'paid_last_month', (select coalesce(sum(amount),0) from payments where status='paid'
+                          and paid_at >= date_trunc('month', now()) - interval '1 month' and paid_at < date_trunc('month', now())),
+      'open_amount', (select coalesce(sum(amount),0) from payments where status in ('failed','expired','charged_back'))
     ),
+    -- Einnahmen der letzten 12 Monate (bestätigte Zahlungen)
+    'revenue_months', coalesce((
+      select jsonb_agg(jsonb_build_object('month', to_char(m, 'YYYY-MM'),
+               'paid', (select coalesce(sum(amount),0) from payments
+                        where status = 'paid' and paid_at >= m and paid_at < m + interval '1 month')) order by m)
+      from generate_series(date_trunc('month', now()) - interval '11 months', date_trunc('month', now()), interval '1 month') m), '[]'::jsonb),
+    'price_per_vehicle', (select price_per_vehicle from settings where id = 1),
     'companies', coalesce((
       select jsonb_agg(jsonb_build_object(
         'id', c.id, 'company_name', c.company_name, 'contact_name', c.contact_name,
         'email', c.email, 'phone', c.phone, 'city', c.city, 'status', c.status,
-        'grace_until', c.grace_until, 'locked_reason', c.locked_reason,
+        'grace_until', c.grace_until, 'locked_reason', c.locked_reason, 'payment_method', c.payment_method, 'cancel_at', c.cancel_at,
         'created_at', c.created_at, 'next_charge_on', c.next_charge_on,
         'vehicles', (select count(*) from vehicles v where v.company_id=c.id and v.active),
         'last_payment', (select jsonb_build_object('amount',p.amount,'status',p.status,'at',coalesce(p.paid_at,p.created_at))
@@ -445,6 +459,32 @@ end $$;
 
 grant execute on function public.admin_overview() to authenticated;
 grant execute on function public.admin_company_detail(uuid) to authenticated;
+
+-- Letzte Zahlungen aller Kunden (Admin)
+create or replace function public.admin_payments(p_limit int default 200) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not is_admin() then raise exception 'forbidden'; end if;
+  if coalesce(auth.jwt()->>'aal','aal1') <> 'aal2' then raise exception 'mfa_required'; end if;
+  return coalesce((select jsonb_agg(x order by x.created_at desc) from (
+    select p.id, p.company_id, c.company_name, p.amount, p.status, p.kind, p.description,
+           p.paid_at, p.created_at
+      from payments p join companies c on c.id = p.company_id
+     order by p.created_at desc limit least(greatest(p_limit,1),1000)) x), '[]'::jsonb);
+end $$;
+grant execute on function public.admin_payments(int) to authenticated;
+
+-- Einstellungen lesen (Admin)
+create or replace function public.admin_settings() returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not is_admin() then raise exception 'forbidden'; end if;
+  return jsonb_build_object('settings', (select to_jsonb(s) from settings s where id = 1),
+                            'admins', (select jsonb_agg(jsonb_build_object('name', a.name, 'email', u.email, 'since', a.created_at))
+                                       from admins a join auth.users u on u.id = a.user_id));
+end $$;
+grant execute on function public.admin_settings() to authenticated;
+
 
 -- =====================================================================
 -- Speicher für Dateien (Belege, PDFs) – privat, pro Fahrzeug

@@ -13,3 +13,6 @@ verify_jwt = true
 
 [functions.admin]
 verify_jwt = true
+
+[functions.admin-setup]
+verify_jwt = false   # Anlage ohne Login, geschützt über ADMIN_SETUP_CODE

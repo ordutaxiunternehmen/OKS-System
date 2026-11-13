@@ -4,6 +4,7 @@
 //   revoke_device   {device_id}
 //   reset_devices   {company_id}       – alle Geräte abmelden (z. B. neues Handy)
 //   set_max_devices {company_id, max}
+//   set_settings    {grace_days?, max_devices?, agb_version?}
 import { admin, audit, cors, getUser, json } from "../_shared/util.ts";
 
 Deno.serve(async (req) => {
@@ -39,6 +40,15 @@ Deno.serve(async (req) => {
         await admin.from("companies").update({ max_devices: Number(b.max) || null }).eq("id", b.company_id);
         await audit(b.company_id, "admin_max_devices", { max: b.max }, actor);
         break;
+      case "set_settings": {
+        const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+        if (b.grace_days != null) patch.grace_days = Math.max(1, Math.min(60, Number(b.grace_days)));
+        if (b.max_devices != null) patch.max_devices = Math.max(1, Math.min(10, Number(b.max_devices)));
+        if (b.agb_version) patch.agb_version = String(b.agb_version).slice(0, 20);
+        await admin.from("settings").update(patch).eq("id", 1);
+        await audit(null, "admin_settings", patch, actor);
+        break;
+      }
       default:
         return json(req, { error: "unknown_action" }, 400);
     }

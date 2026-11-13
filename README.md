@@ -58,9 +58,10 @@ Mit der Supabase-CLI (Claude Code kann das übernehmen):
 supabase login
 supabase link --project-ref <projekt-id>
 supabase secrets set MOLLIE_API_KEY=test_xxx APP_URL=https://cockpitplus.netlify.app \
-  ALLOWED_ORIGINS=https://cockpitplus.netlify.app CRON_SECRET=<langes-zufallswort>
+  ALLOWED_ORIGINS=https://cockpitplus.netlify.app,https://cockpitplus-admin.netlify.app \
+  CRON_SECRET=<langes-zufallswort> ADMIN_SETUP_CODE=<geheimer-code-mind-12-zeichen>
 supabase functions deploy billing app-code admin
-supabase functions deploy mollie-webhook daily-check --no-verify-jwt
+supabase functions deploy mollie-webhook daily-check admin-setup --no-verify-jwt
 ```
 
 ### 4. Tägliche Sperrprüfung
@@ -73,15 +74,12 @@ select cron.schedule('cockpit-lock-overdue', '15 3 * * *', $$select public.lock_
 Neue Website aus diesem Ordner/Branch, *Publish directory* = `web` (steht schon in `netlify.toml`).
 
 ### 6. Admins anlegen (Hasan + Partner)
-1. Supabase → **Authentication → Users → Add user** (E-Mail + Passwort) – für beide.
-2. Im SQL Editor:
-```sql
-insert into public.admins (user_id, name)
-select id, 'Hasan' from auth.users where email = 'HASAN@EMAIL';
-insert into public.admins (user_id, name)
-select id, 'PARTNER' from auth.users where email = 'PARTNER@EMAIL';
-```
-3. `https://<app>/admin/` öffnen → anmelden → QR-Code mit Authenticator-App scannen.
+1. Admin-App öffnen → **„Erstmalig als Admin anlegen“** → Name, E-Mail, Passwort und den Einrichtungscode (`ADMIN_SETUP_CODE`) eingeben. Höchstens 2 Admins.
+2. Anmelden → QR-Code mit einer Authenticator-App scannen (einmalig).
+3. 6-stellige PIN festlegen und Fingerabdruck/Face ID einrichten. Ab jetzt öffnet sich die Admin-App auf diesem Gerät nur mit Fingerabdruck oder PIN.
+4. Nach dem Anlegen beider Admins kann `ADMIN_SETUP_CODE` gelöscht werden – dann ist kein weiteres Anlegen mehr möglich.
+
+**Was die Admin-App zeigt:** Startseite mit Ampel und monatlichem Abo-Umsatz, Kacheln für *Wächtermodus* (live, alle 60 Sek. aktualisiert: Einnahmen pro Monat, offene Beträge, Mitglieder, wer Aufmerksamkeit braucht, neueste Ereignisse), *Kunden* (alle Mitglieder mit bezahlt/offen/gesperrt, Suche, Details), *Zahlungen* (monatlich, diesen/letzten Monat, 12-Monats-Verlauf, Zahlungsmethoden, alle Zahlungen), *Offen & gesperrt*, *Neue Kunden*, *Einstellungen*.
 
 ### 7. Testen (mit Mollie-Testschlüssel)
 - Registrieren (im Mollie-Testmodus mit einer gültigen Test-IBAN laut Mollie-Doku), App öffnen, Daten eingeben, abmelden/anmelden → Daten müssen wieder da sein.

@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
           method: "directdebit", consumerName: account_holder, consumerAccount: cleanIban,
           signatureDate: isoDate(new Date()), mandateReference: `CP-${company.id.slice(0, 8).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`,
         });
-        await admin.from("companies").update({ mollie_mandate_id: mandate.id }).eq("id", company.id);
+        await admin.from("companies").update({ mollie_mandate_id: mandate.id, payment_method: "SEPA-Lastschrift" }).eq("id", company.id);
 
         const vehicles = await activeVehicleCount(company.id);
         // Erster Monat sofort, danach monatlich per Abo
